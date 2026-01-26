@@ -11,49 +11,39 @@ if getgenv().Library then
     getgenv().Library:Unload()
 end
 
-getgenv().getAsset = function(filename)
-    if type(filename) ~= "string" then
-        error("getAsset called with invalid filename: " .. tostring(filename))
+do
+    local cache = {}
+    local baseFolder = "assets/ids"
+    local githubBase =
+        "https://raw.githubusercontent.com/dano0011/12/main/ids/"
+
+    if not isfolder("assets") then
+        makefolder("assets")
     end
-    ...
-end
-
-local PNG_HEADER = "\137PNG\r\n\26\n"
-
-getgenv().getAsset = function(filename)
-    assert(type(filename) == "string", "filename must be string")
-
-    local path = baseFolder .. "/" .. filename
-
-    local function isValidPNG(data)
-        return type(data) == "string" and data:sub(1, 8) == PNG_HEADER
+    if not isfolder(baseFolder) then
+        makefolder(baseFolder)
     end
 
-    local function download()
-        local url = githubBase .. filename
-        local data = game:HttpGet(url)
+    getgenv().getAsset = function(filename)
+        assert(type(filename) == "string", "filename must be string")
 
-        if not isValidPNG(data) then
-            error("Invalid PNG downloaded: " .. filename)
+        local path = baseFolder .. "/" .. filename
+
+        if cache[path] then
+            return cache[path]
         end
 
-        writefile(path, data)
-        return data
-    end
-
-    local data
-    if isfile(path) then
-        data = readfile(path)
-        if not isValidPNG(data) then
-            data = download()
+        if not isfile(path) then
+            local url = githubBase .. filename
+            local data = game:HttpGet(url, true)
+            writefile(path, data)
         end
-    else
-        data = download()
+
+        local assetUrl = getcustomasset(path)
+        cache[path] = assetUrl
+        return assetUrl
     end
-
-    return getcustomasset(path)
 end
-
 
 local Library do
     local cloneref = cloneref or function(x) return x end
