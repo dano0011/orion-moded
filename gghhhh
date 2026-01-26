@@ -11,39 +11,42 @@ if getgenv().Library then
     getgenv().Library:Unload()
 end
 
-do
-    local cache = {}
-    local baseFolder = "assets/ids"
-    local githubBase =
-        "https://raw.githubusercontent.com/dano0011/12/main/ids/"
+local PNG_HEADER = "\137PNG\r\n\26\n"
 
-    if not isfolder("assets") then
-        makefolder("assets")
-    end
-    if not isfolder(baseFolder) then
-        makefolder(baseFolder)
+getgenv().getAsset = function(filename)
+    assert(type(filename) == "string", "filename must be string")
+
+    local path = baseFolder .. "/" .. filename
+
+    local function isValidPNG(data)
+        return type(data) == "string" and data:sub(1, 8) == PNG_HEADER
     end
 
-    getgenv().getAsset = function(filename)
-        assert(type(filename) == "string", "filename must be string")
+    local function download()
+        local url = githubBase .. filename
+        local data = game:HttpGet(url)
 
-        local path = baseFolder .. "/" .. filename
-
-        if cache[path] then
-            return cache[path]
+        if not isValidPNG(data) then
+            error("Invalid PNG downloaded: " .. filename)
         end
 
-        if not isfile(path) then
-            local url = githubBase .. filename
-            local data = game:HttpGet(url, true)
-            writefile(path, data)
-        end
-
-        local assetUrl = getcustomasset(path)
-        cache[path] = assetUrl
-        return assetUrl
+        writefile(path, data)
+        return data
     end
+
+    local data
+    if isfile(path) then
+        data = readfile(path)
+        if not isValidPNG(data) then
+            data = download()
+        end
+    else
+        data = download()
+    end
+
+    return getcustomasset(path)
 end
+
 
 local Library do
     local cloneref = cloneref or function(x) return x end
