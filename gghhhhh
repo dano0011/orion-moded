@@ -11,6 +11,13 @@ if getgenv().Library then
     getgenv().Library:Unload()
 end
 
+getgenv().getAsset = function(filename)
+    if type(filename) ~= "string" then
+        error("getAsset called with invalid filename: " .. tostring(filename))
+    end
+    ...
+end
+
 local PNG_HEADER = "\137PNG\r\n\26\n"
 
 getgenv().getAsset = function(filename)
