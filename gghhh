@@ -15,7 +15,7 @@ do
     local cache = {}
     local baseFolder = "assets/ids"
     local githubBase =
-        "https://raw.githubusercontent.com/expresshubs/orion-moded/refs/heads/main/ids/"
+        "https://raw.githubusercontent.com/dano0011/12/main/ids/"
 
     if not isfolder("assets") then
         makefolder("assets")
