@@ -32,10 +32,12 @@ do
         end
     end
 
-    getgenv().getAsset = function(name, fallbackId)
+    getgenv().getAsset = function(name)
         if cache[name] then
             return cache[name]
         end
+
+        local id = tostring(name):match("%d+")
 
         if hasCustom and type(name) == "string" then
             local path = baseFolder .. "/" .. name
@@ -52,7 +54,7 @@ do
             end
         end
 
-        local asset = "rbxassetid://" .. tostring(fallbackId or name)
+        local asset = "rbxassetid://" .. (id or "")
         cache[name] = asset
         return asset
     end
