@@ -16,6 +16,8 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/main/ids/"
 
+    local FALLBACK_IMAGE = "rbxassetid://0"
+
     local hasCustom =
         type(getcustomasset) == "function" and
         type(writefile) == "function" and
@@ -37,12 +39,13 @@ do
             return cache[name]
         end
 
-        local id = tostring(name):match("%d+")
+        local str = tostring(name)
+        local id = str:match("%d+")
 
-        if hasCustom and type(name) == "string" then
-            local path = baseFolder .. "/" .. name
+        if hasCustom then
+            local path = baseFolder .. "/" .. str
             if not isfile(path) then
-                local ok, data = pcall(game.HttpGet, game, githubBase .. name, true)
+                local ok, data = pcall(game.HttpGet, game, githubBase .. str, true)
                 if ok and data then
                     writefile(path, data)
                 end
@@ -54,11 +57,12 @@ do
             end
         end
 
-        local asset = "rbxassetid://" .. (id or "")
+        local asset = id and ("rbxassetid://" .. id) or FALLBACK_IMAGE
         cache[name] = asset
         return asset
     end
 end
+
 
 
 local Library do
