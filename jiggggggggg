@@ -5034,7 +5034,6 @@ local Library do
 
                     Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Hovered Element"]})
                     Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element"})
-                    Items["Text"]:Tween(nil, {TextTransparency = 0})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
@@ -5044,6 +5043,21 @@ local Library do
 
                     Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Element"]})
                     Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                end)
+
+                Items["Text"]:OnHover(function()
+                    if Toggle.Value then 
+                        return
+                    end
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0})
+                end)
+
+                Items["Text"]:OnHoverLeave(function()
+                    if Toggle.Value then 
+                        return
+                    end
+
                     Items["Text"]:Tween(nil, {TextTransparency = 0.5})
                 end)
             end
