@@ -16,11 +16,19 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
-    local custom = type(getcustomasset) == "function"
+    local custom = false
 
-    if custom then
-        if not isfolder("assets") then makefolder("assets") end
-        if not isfolder(baseFolder) then makefolder(baseFolder) end
+    if type(getcustomasset) == "function" then
+        local ok = pcall(function()
+            if not isfolder("assets") then makefolder("assets") end
+            if not isfolder(baseFolder) then makefolder(baseFolder) end
+
+            local testPath = baseFolder .. "/__test.txt"
+            writefile(testPath, "test")
+            getcustomasset(testPath)
+        end)
+
+        custom = ok
     end
 
     getgenv().getAsset = function(filename)
