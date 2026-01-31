@@ -10,25 +10,31 @@
 if getgenv().Library then
     getgenv().Library:Unload()
 end
-
 do
     local cache = {}
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
-    local custom = false
+    local exec = (identifyexecutor and identifyexecutor() or ""):lower()
+    local noExec = {
+        "xeno",
+        "solara",
+        "velocity",
+        "bunni"
+    }
 
-    if type(getcustomasset) == "function" then
-        local ok = pcall(function()
-            if not isfolder("assets") then makefolder("assets") end
-            if not isfolder(baseFolder) then makefolder(baseFolder) end
+    local custom = type(getcustomasset) == "function"
 
-            local testPath = baseFolder .. "/__test.txt"
-            writefile(testPath, "test")
-            getcustomasset(testPath)
-        end)
+    for _, name in ipairs(noExec) do
+        if exec:find(name) then
+            custom = false
+            break
+        end
+    end
 
-        custom = ok
+    if custom then
+        if not isfolder("assets") then makefolder("assets") end
+        if not isfolder(baseFolder) then makefolder(baseFolder) end
     end
 
     getgenv().getAsset = function(filename)
@@ -53,7 +59,6 @@ do
         return asset
     end
 end
-
 
 
 local Library do
