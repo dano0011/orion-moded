@@ -16,8 +16,7 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
-    local exec = (identifyexecutor and identifyexecutor() or ""):lower()
-    local custom = type(getcustomasset) == "function" and not exec:find("xeno") and not exec:find("solara")
+    local custom = type(getcustomasset) == "function"
 
     if custom then
         if not isfolder("assets") then makefolder("assets") end
@@ -46,6 +45,7 @@ do
         return asset
     end
 end
+
 
 
 local Library do
