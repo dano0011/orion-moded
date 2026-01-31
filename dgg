@@ -16,27 +16,18 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
-    local executor = (identifyexecutor and identifyexecutor() or ""):lower()
-    local badExecutor = executor:find("xeno") or executor:find("solara")
+    local useCustom = type(getcustomasset) == "function"
 
-    local hasCustom =
-        not badExecutor and
-        type(getcustomasset) == "function" 
-
-    if hasCustom then
-        if not isfolder("assets") then
-            makefolder("assets")
-        end
-        if not isfolder(baseFolder) then
-            makefolder(baseFolder)
-        end
+    if useCustom then
+        if not isfolder("assets") then makefolder("assets") end
+        if not isfolder(baseFolder) then makefolder(baseFolder) end
     end
 
     getgenv().getAsset = function(filename)
         local id = tostring(filename):match("%d+")
         if not id then return nil end
 
-        if not hasCustom then
+        if not useCustom then
             return "rbxassetid://" .. id
         end
 
@@ -46,8 +37,7 @@ do
         end
 
         if not isfile(path) then
-            local data = game:HttpGet(githubBase .. filename, true)
-            writefile(path, data)
+            writefile(path, game:HttpGet(githubBase .. filename, true))
         end
 
         local asset = getcustomasset(path)
