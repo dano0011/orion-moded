@@ -16,7 +16,11 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
+    local executor = (identifyexecutor and identifyexecutor() or ""):lower()
+    local badExecutor = executor:find("xeno") or executor:find("solara")
+
     local hasCustom =
+        not badExecutor and
         type(getcustomasset) == "function" and
         type(writefile) == "function" and
         type(isfile) == "function" and
