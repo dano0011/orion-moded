@@ -16,10 +16,10 @@ do
     local baseFolder = "assets/ids"
     local githubBase = "https://raw.githubusercontent.com/dano0011/12/refs/heads/main/ids/"
 
-    local executor = (identifyexecutor and identifyexecutor() or ""):lower()
-    local useCustom = type(getcustomasset) == "function" and not executor:find("xeno") and not executor:find("solara")
+    local exec = (identifyexecutor and identifyexecutor() or ""):lower()
+    local custom = type(getcustomasset) == "function" and not exec:find("xeno") and not exec:find("solara")
 
-    if useCustom then
+    if custom then
         if not isfolder("assets") then makefolder("assets") end
         if not isfolder(baseFolder) then makefolder(baseFolder) end
     end
@@ -28,7 +28,7 @@ do
         local id = tostring(filename):match("%d+")
         if not id then return nil end
 
-        if not useCustom then
+        if not custom then
             return "rbxassetid://" .. id
         end
 
