@@ -21,11 +21,7 @@ do
 
     local hasCustom =
         not badExecutor and
-        type(getcustomasset) == "function" and
-        type(writefile) == "function" and
-        type(isfile) == "function" and
-        type(isfolder) == "function" and
-        type(makefolder) == "function"
+        type(getcustomasset) == "function" 
 
     if hasCustom then
         if not isfolder("assets") then
