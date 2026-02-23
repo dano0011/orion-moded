@@ -7266,6 +7266,12 @@ local Library do
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Type a config name in the textbox above first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7294,6 +7300,12 @@ local Library do
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Select a config from the dropdown first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7318,6 +7330,12 @@ local Library do
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Select a config from the dropdown first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7332,6 +7350,12 @@ local Library do
                     Library:MakeNotification({
                         Name = "Success!",
                         Content = "Saved config "..ConfigSelected.." successfully",
+                        Time = 3
+                    })
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = ConfigSelected and "Config "..ConfigSelected.." no longer exists" or "Select a config from the dropdown first",
                         Time = 3
                     })
                 end
