@@ -7252,26 +7252,21 @@ local Library do
                 if ConfigName ~= "" then
                     if isfile(Library.Folders.Configs .. "/" .. ConfigName .. ".json") then
                         Library:MakeNotification({
-                            Name = "Error",
-                            Content = "Config with the name "..ConfigName.." already exists",
+                            Name = "Error", 
+                            Content = "Config with the name "..ConfigName.." already exists", 
                             Time = 3
                         })
+
                     else
                         writefile(Library.Folders.Configs .. "/" .. ConfigName .. ".json", Library:GetConfig())
                         Library:RefreshConfigsList(ConfigsDropdown)
-
+    
                         Library:MakeNotification({
                             Name = "Success!",
                             Content = "Created config "..ConfigName.." successfully",
                             Time = 3
                         })
                     end
-                else
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Type a config name in the textbox above first",
-                        Time = 3
-                    })
                 end
             end
         })
@@ -7280,13 +7275,12 @@ local Library do
             Name = "Delete",
             Callback = function()
                 if ConfigSelected then
-                    local prevName = ConfigSelected
-                    if isfile(Library.Folders.Configs .. "/" .. prevName..".json") then
+                    if isfile(Library.Folders.Configs .. "/" .. ConfigSelected..".json") then
+                        local prevName = ConfigSelected
                         delfile(Library.Folders.Configs .. "/" .. prevName..".json")
 
                         ConfigsDropdown:Remove(prevName)
                         ConfigsDropdown:SetText("--")
-                        ConfigSelected = nil
 
                         Library:MakeNotification({
                             Name = "Success!",
@@ -7296,16 +7290,10 @@ local Library do
                     else
                         Library:MakeNotification({
                             Name = "Error!",
-                            Content = "Config "..prevName.." does not exist",
+                            Content = "Config "..ConfigSelected.." does not exist",
                             Time = 3
                         })
                     end
-                else
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Select a config from the dropdown first",
-                        Time = 3
-                    })
                 end
             end
         })
@@ -7323,19 +7311,12 @@ local Library do
                             Time = 10,
                         })
                     else
-                        writefile(Library.Folders.Configs .. "/lastused.dat", ConfigSelected)
                         Library:MakeNotification({
                             Name = "Success!",
                             Content = "Loaded config "..ConfigSelected.." successfully",
                             Time = 3
                         })
                     end
-                else
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Select a config from the dropdown first",
-                        Time = 3
-                    })
                 end
             end
         })
@@ -7345,17 +7326,10 @@ local Library do
             Callback = function()
                 if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json") then
                     writefile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json", Library:GetConfig())
-                    writefile(Library.Folders.Configs .. "/lastused.dat", ConfigSelected)
 
                     Library:MakeNotification({
                         Name = "Success!",
                         Content = "Saved config "..ConfigSelected.." successfully",
-                        Time = 3
-                    })
-                else
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = ConfigSelected and "Config "..ConfigSelected.." no longer exists" or "Select a config from the dropdown first",
                         Time = 3
                     })
                 end
@@ -7376,15 +7350,6 @@ local Library do
         })
 
         Library:RefreshConfigsList(ConfigsDropdown)
-
-        local lastUsedPath = Library.Folders.Configs .. "/lastused.dat"
-        if isfile(lastUsedPath) then
-            local lastName = readfile(lastUsedPath)
-            if lastName and lastName ~= "" and isfile(Library.Folders.Configs .. "/" .. lastName .. ".json") then
-                ConfigsDropdown:Set(lastName)
-                Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. lastName .. ".json"))
-            end
-        end
     end
 
     Library.CreateSettingsSection = function(self, Tab)
