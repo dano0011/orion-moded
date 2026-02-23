@@ -1044,7 +1044,7 @@ local Library do
             end
         end
 
-        Element:Refresh(ReturnList)
+        Element:Refresh(ReturnList, true)
     end
 
     Library.IsMouseOverFrame = function(self, Frame)
@@ -7248,21 +7248,26 @@ local Library do
                 if ConfigName ~= "" then
                     if isfile(Library.Folders.Configs .. "/" .. ConfigName .. ".json") then
                         Library:MakeNotification({
-                            Name = "Error", 
-                            Content = "Config with the name "..ConfigName.." already exists", 
+                            Name = "Error",
+                            Content = "Config with the name "..ConfigName.." already exists",
                             Time = 3
                         })
-
                     else
                         writefile(Library.Folders.Configs .. "/" .. ConfigName .. ".json", Library:GetConfig())
                         Library:RefreshConfigsList(ConfigsDropdown)
-    
+
                         Library:MakeNotification({
                             Name = "Success!",
                             Content = "Created config "..ConfigName.." successfully",
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Please enter a config name first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7271,24 +7276,32 @@ local Library do
             Name = "Delete",
             Callback = function()
                 if ConfigSelected then
-                    if isfile(Library.Folders.Configs .. "/" .. ConfigSelected..".json") then
-                        delfile(Library.Folders.Configs .. "/" .. ConfigSelected..".json")
+                    local prevName = ConfigSelected
+                    if isfile(Library.Folders.Configs .. "/" .. prevName..".json") then
+                        delfile(Library.Folders.Configs .. "/" .. prevName..".json")
 
-                        ConfigsDropdown:Remove(ConfigSelected)
+                        ConfigsDropdown:Remove(prevName)
                         ConfigsDropdown:SetText("--")
+                        ConfigSelected = nil
 
                         Library:MakeNotification({
                             Name = "Success!",
-                            Content = "Deleted config "..ConfigSelected.." successfully",
+                            Content = "Deleted config "..prevName.." successfully",
                             Time = 3
                         })
                     else
                         Library:MakeNotification({
                             Name = "Error!",
-                            Content = "Config "..ConfigSelected.." does not exist",
+                            Content = "Config "..prevName.." does not exist",
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Please select a config from the dropdown first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7302,7 +7315,7 @@ local Library do
                     if not Success then
                         Library:MakeNotification({
                             Name = "Error!",
-                            Content = "Failed to load configs, report this to the developers:\n"..Error,
+                            Content = "Failed to load config:\n"..tostring(Error),
                             Time = 10,
                         })
                     else
@@ -7313,6 +7326,12 @@ local Library do
                             Time = 3
                         })
                     end
+                else
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Please select a config from the dropdown first",
+                        Time = 3
+                    })
                 end
             end
         })
@@ -7320,13 +7339,27 @@ local Library do
         ConfigsSection:AddButton({
             Name = "Save",
             Callback = function()
-                if ConfigSelected and isfile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json") then
-                    writefile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json", Library:GetConfig())
-                    writefile(Library.Folders.Configs .. "/lastused.dat", ConfigSelected)
+                if ConfigSelected then
+                    if isfile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json") then
+                        writefile(Library.Folders.Configs .. "/" .. ConfigSelected .. ".json", Library:GetConfig())
+                        writefile(Library.Folders.Configs .. "/lastused.dat", ConfigSelected)
 
+                        Library:MakeNotification({
+                            Name = "Success!",
+                            Content = "Saved config "..ConfigSelected.." successfully",
+                            Time = 3
+                        })
+                    else
+                        Library:MakeNotification({
+                            Name = "Error!",
+                            Content = "Config "..ConfigSelected.." no longer exists, create it first",
+                            Time = 3
+                        })
+                    end
+                else
                     Library:MakeNotification({
-                        Name = "Success!",
-                        Content = "Saved config "..ConfigSelected.." successfully",
+                        Name = "Error!",
+                        Content = "Please select a config from the dropdown first",
                         Time = 3
                     })
                 end
@@ -7352,8 +7385,7 @@ local Library do
         if isfile(lastUsedPath) then
             local lastName = readfile(lastUsedPath)
             if lastName and lastName ~= "" and isfile(Library.Folders.Configs .. "/" .. lastName .. ".json") then
-                ConfigSelected = lastName
-                ConfigsDropdown:SetText(lastName)
+                ConfigsDropdown:Set(lastName)
                 Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. lastName .. ".json"))
             end
         end
