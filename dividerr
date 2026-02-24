@@ -7157,8 +7157,6 @@ local Library do
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
             end
 
-            Library.Flags[Paragraph.Name] = Paragraph
-
             function Paragraph:Set(Text)
                 Text = tostring(Text)
 
@@ -7244,22 +7242,26 @@ local Library do
             Name = "Create",
             Callback = function()
                 if ConfigName ~= "" then
+                    print("past 1")
                     if isfile(Library.Folders.Configs .. "/" .. ConfigName .. ".json") then
+                        print("DURRRR")
                         Library:MakeNotification({
                             Name = "Error", 
                             Content = "Config with the name "..ConfigName.." already exists", 
                             Time = 3
                         })
-
                     else
-                        writefile(Library.Folders.Configs .. "/" .. ConfigName .. ".json", Library:GetConfig())
-                        Library:RefreshConfigsList(ConfigsDropdown)
-    
-                        Library:MakeNotification({
-                            Name = "Success!",
-                            Content = "Created config "..ConfigName.." successfully",
-                            Time = 3
-                        })
+                        local success, err = pcall(function()
+                            writefile(Library.Folders.Configs .. "/" .. ConfigName .. ".json", Library:GetConfig())
+                            Library:RefreshConfigsList(ConfigsDropdown)
+        
+                            Library:MakeNotification({
+                                Name = "Success!",
+                                Content = "Created config "..ConfigName.." successfully",
+                                Time = 3
+                            })
+                        end)
+                        warn(success, err)
                     end
                 end
             end
