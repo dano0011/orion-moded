@@ -475,20 +475,22 @@ local Library do
             return nil
         end
 
-        local ChatPage = Window:MakeTab({
-            Name = Window.GlobalChatOptions.TabName
+        local GlobalChatTab = Window:MakeTab({
+                Name = Window.GlobalChatOptions.TabName,
+                Icon = "rbxassetid://10734906975",
+                PremiumOnly = false
         })
 
-        local SubTab = ChatPage:AddSubTab({
-            Name = Window.GlobalChatOptions.SubTabName,
-            Columns = 1
+        local SubTab = GlobalChatTab:AddSubTab({
+                Name = Window.GlobalChatOptions.SubTabName,
+                Columns = 1
         })
 
         local ChatSystem = SubTab:GlobalChat()
         ChatSystem:SetConnectedText(Window.GlobalChatOptions.InitialStatusText)
 
         Window.AutoGlobalChat = {
-            Page = ChatPage,
+            Page = GlobalChatTab,
             SubTab = SubTab,
             ChatSystem = ChatSystem
         }
