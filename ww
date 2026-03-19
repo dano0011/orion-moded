@@ -9457,7 +9457,7 @@ local Library do
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
                 TextTransparency = 0.5,
-                Text = "Age: " .. LocalPlayer.AccountAge .. " days • Joined: " .. joinDate,
+                Text = "Age: " .. LocalPlayer.AccountAge .. " days | Joined: " .. joinDate,
                 Size = UDim2New(1, -93, 0, 15),
                 Position = UDim2New(0, 85, 0, 40),
                 BackgroundTransparency = 1,
