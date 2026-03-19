@@ -9229,7 +9229,7 @@ local Library do
     Library.CreateHomeTab = function(self, Window, DiscordLink)
         local HomeTab = Window:MakeTab({
             Name = "Home",
-            Icon = "rbxassetid://4483345998",
+            Icon = "rbxassetid://10723407389",
         })
 
         HomeTab.Items["Columns"]:Clean()
@@ -9644,4 +9644,3 @@ end
 
 getgenv().Library = Library
 return Library
-
