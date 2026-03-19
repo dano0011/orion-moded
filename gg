@@ -9534,14 +9534,14 @@ local Library do
                 TextColor3 = FromRGB(255, 255, 255),
                 TextTransparency = 0.4,
                 Text = "Join to suggest features, report bugs, and connect with the community.",
-                Size = UDim2New(0, 350, 0, 40),
-                Position = UDim2New(0, 310, 0, 50), 
+                Size = UDim2New(1, -320, 0, 40), 
+                Position = UDim2New(0, 310, 0, 50),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextWrapped = true,
+                TextTruncate = Enum.TextTruncate.AtEnd, 
                 BorderSizePixel = 0,
-                TextSize = 14,
-                BackgroundColor3 = FromRGB(255, 255, 255)
+                TextSize = 14
             })  Items["DiscordDescription"]:AddToTheme({TextColor3 = "Text"})
 
             Items["JoinDiscord"]:Connect("MouseEnter", function()
@@ -9652,13 +9652,13 @@ local Library do
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Text = getexecutorname(),
+                Text = "Executor: " .. getexecutorname(),
                 Size = UDim2New(1, -16, 0, 15),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Position = UDim2New(0, 8, 0, 35),
                 BorderSizePixel = 0,
-                TextSize = 33,
+                TextSize = 22,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
 
