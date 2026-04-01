@@ -1116,72 +1116,59 @@ local Library do
         return Library:CompareVectors(Top, BoundryTop) or Library:CompareVectors(BoundryBottom, Bottom)
     end
 
-        local HoverPadding = 999
+local HoverPadding = 999
 
-        Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
-            local TextWidth = Text.Instance.TextBounds.X
-            local FrameWidth = MaxSize
-            
-            local OriginalAnchorPoint = Text.Instance.AnchorPoint
-            local OriginalXOffset = Text.Instance.Position.X.Offset
+Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
+    local TextWidth = Text.Instance.TextBounds.X
+    local FrameWidth = MaxSize
+    
+    local OriginalAnchorPoint = Text.Instance.AnchorPoint
+    local OriginalXOffset = Text.Instance.Position.X.Offset
 
-            -- ONLY detect actual cutoff
-            local Overflow = TextWidth - FrameWidth
+    local Overflow = TextWidth - FrameWidth + HoverPadding * 2
 
-            if Overflow <= 0 then 
+    if TextWidth <= FrameWidth then
+        return
+    end
+
+    local VisiblePadding = 6
+    local SlideAmount = (TextWidth - FrameWidth) + VisiblePadding
+
+    local TargetX = OriginalXOffset - SlideAmount
+    local SlideDuration = SlideAmount / Library.MarqueStyle.PixelsPerSecond
+
+    local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+
+    local SlideTween = Tween:Create(Text, Tweeninfo, {
+        Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)
+    }, false, false)
+
+    local ResetTween = Tween:Create(Text, nil, {
+        Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)
+    }, false, false)
+    
+    local HoverID = 0
+
+    Text:OnHover(function()
+        HoverID += 1
+        local CurrentID = HoverID
+
+        task.delay(Library.MarqueStyle.HoverDelay, function()
+            if HoverID ~= CurrentID then
                 return 
             end
 
-            -- only slide EXACT amount needed (+ small padding so it looks clean)
-            local VisiblePadding = 6
-            local SlideAmount = Overflow + VisiblePadding
+            SlideTween:Play()
+        end)
+    end)
 
-            local TargetX = OriginalXOffset - SlideAmount
-            local SlideDuration = SlideAmount / Library.MarqueStyle.PixelsPerSecond
+    Text:OnHoverLeave(function()
+        HoverID += 1
+        SlideTween:Pause()
+        ResetTween:Play()
+    end)
+end
 
-            local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-
-            local SlideTween = Tween:Create(Text, Tweeninfo, {
-                Position = UDim2New(
-                    Text.Instance.Position.X.Scale,
-                    TargetX,
-                    OriginalAnchorPoint.Y,
-                    0
-                )
-            }, false, false)
-
-            local ResetTween = Tween:Create(Text, nil, {
-                Position = UDim2New(
-                    Text.Instance.Position.X.Scale,
-                    OriginalXOffset,
-                    OriginalAnchorPoint.Y,
-                    0
-                )
-            }, false, false)
-            
-            local HoverID = 0
-
-            Text:OnHover(function()
-                HoverID += 1
-                local CurrentID = HoverID
-
-                task.delay(Library.MarqueStyle.HoverDelay, function()
-                    if HoverID ~= CurrentID then
-                        return 
-                    end
-
-                    SlideTween:Play()
-                end)
-            end)
-
-            Text:OnHoverLeave(function()
-                HoverID += 1
-                SlideTween:Pause()
-                ResetTween:Play()
-            end)
-        end
-
-        
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
             Flag = Data.Flag,
