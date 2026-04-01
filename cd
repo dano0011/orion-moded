@@ -1117,6 +1117,7 @@ local Library do
     local HoverPadding = 999
 
     Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
+        task.defer(function()
         local TextWidth = Text.Instance.TextBounds.X
         local FrameWidth = MaxSize
 
@@ -1153,9 +1154,10 @@ local Library do
         end)
 
         Text:OnHoverLeave(function()
-            HoverID += 1
-            SlideTween:Pause()
-            ResetTween:Play()
+                HoverID += 1
+                SlideTween:Pause()
+                ResetTween:Play()
+            end)
         end)
     end
 
