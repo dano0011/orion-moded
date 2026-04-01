@@ -1114,7 +1114,7 @@ local Library do
         return Library:CompareVectors(Top, BoundryTop) or Library:CompareVectors(BoundryBottom, Bottom)
     end
 
-    local HoverPadding = 100
+    local HoverPadding = 999
 
     Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize) -- lol
         local TextWidth = Text.Instance.TextBounds.X
