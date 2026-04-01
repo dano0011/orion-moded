@@ -7974,16 +7974,21 @@ local Library do
     end
 end
 
-task.spawn(function()
-    local name = getAutoConfig()
-    if name then
-        local path = Library.Folders.Configs .. "/" .. name .. ".json"
-        if isfile(path) then
-            Library:LoadConfig(readfile(path))
-            setAutoConfig(name)
-        end
+getgenv().Library = Library
+        task.defer(function()
+            task.wait(1)
+            if Library._PendingAutoload then
+                Library:SafeCall(Library._PendingAutoload)
+                Library._PendingAutoload = nil
+            end
+        end)
+
+task.defer(function()
+    task.wait(1)
+    if Library._PendingAutoload then
+        Library:SafeCall(Library._PendingAutoload)
+        Library._PendingAutoload = nil
     end
 end)
 
-getgenv().Library = Library
 return Library
