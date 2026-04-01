@@ -1123,9 +1123,7 @@ Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
     local FrameWidth = MaxSize
     
     local OriginalAnchorPoint = Text.Instance.AnchorPoint
-    local OriginalXOffset = Text.Instance.Position.X.Offset
-
-    local Overflow = TextWidth - FrameWidth + HoverPadding * 2
+    local OriginalPosition = Text.Instance.Position
 
     if TextWidth <= FrameWidth then
         return
@@ -1134,17 +1132,22 @@ Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
     local VisiblePadding = 6
     local SlideAmount = (TextWidth - FrameWidth) + VisiblePadding
 
-    local TargetX = OriginalXOffset - SlideAmount
+    local TargetX = OriginalPosition.X.Offset - SlideAmount
     local SlideDuration = SlideAmount / Library.MarqueStyle.PixelsPerSecond
 
     local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 
     local SlideTween = Tween:Create(Text, Tweeninfo, {
-        Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)
+        Position = UDim2.new(
+            OriginalPosition.X.Scale,
+            TargetX,
+            OriginalPosition.Y.Scale,
+            OriginalPosition.Y.Offset
+        )
     }, false, false)
 
     local ResetTween = Tween:Create(Text, nil, {
-        Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)
+        Position = OriginalPosition
     }, false, false)
     
     local HoverID = 0
