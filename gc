@@ -3102,16 +3102,6 @@ local Library do
                 Library:CreateHomeTab(result, Data.DiscordLink or "discord.gg/expresshub")
             end
 
-           task.defer(function()
-                local name = Library:GetAutoloadConfig()
-                if name then
-                    local path = Library.Folders.Configs .. "/" .. name .. ".json"
-                    if isfile(path) then
-                        Library:LoadConfig(readfile(path))
-                    end
-                end
-            end)
-
             return result
         end
 
@@ -8015,13 +8005,5 @@ getgenv().Library = Library
                 Library._PendingAutoload = nil
             end
         end)
-
-task.defer(function()
-    task.wait(1)
-    if Library._PendingAutoload then
-        Library:SafeCall(Library._PendingAutoload)
-        Library._PendingAutoload = nil
-    end
-end)
 
 return Library
