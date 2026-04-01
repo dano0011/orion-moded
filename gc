@@ -1118,42 +1118,40 @@ local Library do
 
     Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize)
         task.defer(function()
-        local TextWidth = Text.Instance.TextBounds.X
-        local FrameWidth = MaxSize
+            local TextWidth = Text.Instance.TextBounds.X
+            local FrameWidth = MaxSize
 
-        local OriginalAnchorPoint = Text.Instance.AnchorPoint
-        local OriginalXOffset = Text.Instance.Position.X.Offset
+            local OriginalAnchorPoint = Text.Instance.AnchorPoint
+            local OriginalXOffset = Text.Instance.Position.X.Offset
 
-        local Overflow = TextWidth - FrameWidth
+            local Overflow = TextWidth - FrameWidth
 
-        if Overflow <= 0 then
-            return
-        end
+            if Overflow <= 0 then
+                return
+            end
 
-        local TargetX = OriginalXOffset - Overflow
-        local SlideDuration = Overflow / Library.MarqueStyle.PixelsPerSecond
+            local TargetX = OriginalXOffset - Overflow
+            local SlideDuration = Overflow / Library.MarqueStyle.PixelsPerSecond
 
-        local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-        local SlideTween = Tween:Create(Text, Tweeninfo, {Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)}, false, false)
-        local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
+            local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+            local SlideTween = Tween:Create(Text, Tweeninfo, {Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)}, false, false)
+            local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
 
-        local HoverID = 0
+            local HoverID = 0
 
-        Text:OnHover(function()
-            HoverID += 1
-            
-            local CurrentID = HoverID
+            Text:OnHover(function()
+                HoverID += 1
+                local CurrentID = HoverID
 
-            task.delay(Library.MarqueStyle.HoverDelay, function()
-                if HoverID ~= CurrentID then
-                    return 
-                end
-
-                SlideTween:Play()
+                task.delay(Library.MarqueStyle.HoverDelay, function()
+                    if HoverID ~= CurrentID then
+                        return
+                    end
+                    SlideTween:Play()
+                end)
             end)
-        end)
 
-        Text:OnHoverLeave(function()
+            Text:OnHoverLeave(function()
                 HoverID += 1
                 SlideTween:Pause()
                 ResetTween:Play()
@@ -1161,6 +1159,7 @@ local Library do
         end)
     end
 
+    
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
             Flag = Data.Flag,
