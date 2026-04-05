@@ -3751,7 +3751,7 @@ local Library do
                     CornerRadius = UDimNew(0, 6)
                 })
 
-                Library:AddMarqueStyleHoverThing(Items["Title"], 999)
+                Library:AddMarqueStyleHoverThing(Items["Title"], Items["Top"])
 
                 if not IsMobile then
                     Items["CloseButton"] = Instances:Create("ImageButton", {
