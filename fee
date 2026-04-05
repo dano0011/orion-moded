@@ -1441,68 +1441,38 @@ local Library do
         Element:Refresh(ReturnList)
     end
 
-    Library.AutoloadMetaPath = Library.Folders.Cache .. "/_autoload.json"
+    local ConfigStateFile = Library.Folders.Configs .. "/_autoload.txt"
 
-    do
-        local OldPath = Library.Folders.Configs .. "/_autoload.json"
-        if isfile(OldPath) then
-            if not isfile(Library.AutoloadMetaPath) then
-                pcall(function() writefile(Library.AutoloadMetaPath, readfile(OldPath)) end)
-            end
-            pcall(function() delfile(OldPath) end)
+    local function getAutoConfig()
+        if isfile(ConfigStateFile) then
+            local name = readfile(ConfigStateFile)
+            return name:gsub("%.json", "")
         end
     end
 
-    Library.LoadAutoloadMeta = function(self)
-        if isfile(Library.AutoloadMetaPath) then
-            local Ok, Decoded = pcall(function()
-                return HttpService:JSONDecode(readfile(Library.AutoloadMetaPath))
-            end)
-            if Ok and type(Decoded) == "table" then
-                return Decoded
-            end
-        end
-        return {}
+    local function setAutoConfig(name)
+        name = name:gsub("%.json", "")
+        writefile(ConfigStateFile, name)
     end
 
-    Library.SaveAutoloadMeta = function(self, Meta)
-        local Ok, Encoded = pcall(function()
-            return HttpService:JSONEncode(Meta)
-        end)
-        if Ok then
-            writefile(Library.AutoloadMetaPath, Encoded)
-        end
+    function Library:GetAutoloadConfig()
+        return getAutoConfig()
     end
 
-    Library.SetAutoload = function(self, ConfigNameStr, Enabled)
-        local Meta = Library:LoadAutoloadMeta()
-        if Enabled then
-            Meta[ConfigNameStr] = os.time()
+    Library.SetAutoload = function(self, name, enabled)
+        if enabled then
+            setAutoConfig(name)
         else
-            Meta[ConfigNameStr] = nil
-        end
-        Library:SaveAutoloadMeta(Meta)
-    end
-
-    Library.IsAutoloadEnabled = function(self, ConfigNameStr)
-        local Meta = Library:LoadAutoloadMeta()
-        return Meta[ConfigNameStr] ~= nil
-    end
-
-    Library.GetAutoloadConfig = function(self)
-        local Meta = Library:LoadAutoloadMeta()
-        local BestName = nil
-        local BestTime = 0
-        for Name, Timestamp in Meta do
-            if type(Timestamp) == "number" and Timestamp > BestTime then
-                local FilePath = Library.Folders.Configs .. "/" .. Name .. ".json"
-                if isfile(FilePath) then
-                    BestName = Name
-                    BestTime = Timestamp
+            if getAutoConfig() == name then
+                if isfile(ConfigStateFile) then
+                    delfile(ConfigStateFile)
                 end
             end
         end
-        return BestName
+    end
+
+    Library.IsAutoloadEnabled = function(self, name)
+        return getAutoConfig() == name
     end
 
     Library.IsMouseOverFrame = function(self, Frame)
@@ -1534,50 +1504,53 @@ local Library do
         return Library:CompareVectors(Top, BoundryTop) or Library:CompareVectors(BoundryBottom, Bottom)
     end
 
-    local HoverPadding = 999
+    local HoverPadding = 5
 
-    Library.AddMarqueStyleHoverThing = function(self, Text, MaxSize) -- lol
-        local TextWidth = Text.Instance.TextBounds.X
-        local FrameWidth = MaxSize
-        
+    Library.AddMarqueStyleHoverThing = function(self, Text, ContainerFrame) -- lol
         local OriginalAnchorPoint = Text.Instance.AnchorPoint
         local OriginalXOffset = Text.Instance.Position.X.Offset
 
-        local Overflow = TextWidth - FrameWidth + HoverPadding * 2
-
-        if Overflow <= 0 then 
-            return 
-        end
-
-        local TargetX = HoverPadding - Overflow
-        local SlideDuration = Overflow / Library.MarqueStyle.PixelsPerSecond
-
-        local Tweeninfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
-        local SlideTween = Tween:Create(Text, Tweeninfo, {Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)}, false, false)
-        local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
-        
         local HoverID = 0
+        local ActiveTween = nil
 
-        Text:OnHover(function()
+        ContainerFrame:OnHover(function()
             HoverID += 1
-            
             local CurrentID = HoverID
+
+            local TextWidth = Text.Instance.TextBounds.X
+            local FrameWidth = ContainerFrame.Instance.AbsoluteSize.X
+            local VisibleWidth = FrameWidth * 0.85 - OriginalXOffset
+
+            local Overflow = TextWidth - VisibleWidth
+            if Overflow <= 0 then
+                return
+            end
+
+            local TargetX = OriginalXOffset - Overflow - HoverPadding
+            local SlideDuration = (Overflow + HoverPadding) / Library.MarqueStyle.PixelsPerSecond
 
             task.delay(Library.MarqueStyle.HoverDelay, function()
                 if HoverID ~= CurrentID then
                     return 
                 end
 
-                SlideTween:Play()
+                local SlideInfo = TweenInfo.new(SlideDuration, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+                ActiveTween = Tween:Create(Text, SlideInfo, {Position = UDim2New(0, TargetX, OriginalAnchorPoint.Y, 0)}, false, false)
+                ActiveTween:Play()
             end)
         end)
 
-        Text:OnHoverLeave(function()
+        ContainerFrame:OnHoverLeave(function()
             HoverID += 1
-            SlideTween:Pause()
+            if ActiveTween then
+                ActiveTween:Pause()
+                ActiveTween = nil
+            end
+            local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
             ResetTween:Play()
         end)
     end
+
 
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
