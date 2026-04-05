@@ -184,6 +184,7 @@ local Library do
 
         Snowing = true,
         HideTooltips = false,
+        MuteNotifications = false,
 
         MarqueStyle = { 
             HoverDelay = 0.7,
@@ -2681,6 +2682,7 @@ local Library do
     end
 
     Library.MakeNotification = function(self, Data)
+        if self.MuteNotifications then return end
         local Items = { } do 
             Items["Notification"] = Instances:Create("Frame", {
                 Parent = self.NotifHolder.Instance,
@@ -12698,6 +12700,15 @@ local Library do
             Default = false,
             Callback = function(Value)
                 Library.HideTooltips = Value
+            end
+        })
+
+        SettingsSection:AddToggle({
+            Name = "Mute Notifications",
+            Flag = "MuteNotifications",
+            Default = false,
+            Callback = function(Value)
+                Library.MuteNotifications = Value
             end
         })
     end
