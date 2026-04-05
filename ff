@@ -6303,125 +6303,59 @@ local Library do
                 return false
             end
 
-            local HomoglyphMap = {
-                ["a"] = {"a","@","4","∂","á","à","â","ä","ã","å","æ","α","а"},
-                ["b"] = {"b","8","6","ß","β","ь","в"},
-                ["c"] = {"c","(","[","¢","©","ç","с","ϲ"},
-                ["d"] = {"d","∂","ð","д"},
-                ["e"] = {"e","3","€","ε","є","ë","é","è","ê","е"},
-                ["f"] = {"f","ƒ","ф"},
-                ["g"] = {"g","9","6","ġ","д"},
-                ["h"] = {"h","#","н"},
-                ["i"] = {"i","1","l","|","!","í","ì","î","ï","ı","і"},
-                ["j"] = {"j","ј"},
-                ["k"] = {"k","к"},
-                ["l"] = {"l","1","|","£","ℓ","і","i","л"},
-                ["m"] = {"m","м"},
-                ["n"] = {"n","η","и","п"},
-                ["o"] = {"o","0","ø","ó","ò","ô","ö","õ","ο","о","ϕ","ω","σ"},
-                ["p"] = {"p","ρ","р"},
-                ["q"] = {"q","ԛ"},
-                ["r"] = {"r","®","г"},
-                ["s"] = {"s","5","$","§","ş","з","ѕ"},
-                ["t"] = {"t","7","+","†","т"},
-                ["u"] = {"u","ú","ù","û","ü","μ","υ","и","у"},
-                ["v"] = {"v","√","ν","в"},
-                ["w"] = {"w","ω","ш","щ"},
-                ["x"] = {"x","×","х","ж"},
-                ["y"] = {"y","ψ","γ","у"},
-                ["z"] = {"z","2","ž","з"},
-            }
-
-            local NormLookup = {}
-            for canon, variants in HomoglyphMap do
-                for _, v in variants do
-                    NormLookup[v] = canon
-                end
-            end
-
-            local ZeroWidthPattern = "[\xE2\x80\x8B\xE2\x80\x8C\xE2\x80\x8D\xE2\x80\x8E\xE2\x80\x8F\xC2\xAD\xEF\xBB\xBF]+"
-
-            local function NormalizeChar(c)
-                return NormLookup[c] or NormLookup[c:lower()] or c:lower()
-            end
-
-            local function NormalizeText(Text)
-                local stripped = Text:gsub(ZeroWidthPattern, "")
-                local out = {}
-                for i = 1, #stripped do
-                    local c = stripped:sub(i, i)
-                    if c:match("[%a%d]") or NormLookup[c] then
-                        local n = NormalizeChar(c)
-                        if n:match("[%a%d]") then
-                            if #out == 0 or out[#out] ~= n then
-                                out[#out + 1] = n
-                            end
-                        end
-                    end
-                end
-                return table.concat(out)
-            end
-
-            local function NormalizeWord(Word)
-                local stripped = Word:lower():gsub("[^%a%d]", "")
-                local out = {}
-                for i = 1, #stripped do
-                    local c = stripped:sub(i, i)
-                    if #out == 0 or out[#out] ~= c then
-                        out[#out + 1] = c
-                    end
-                end
-                return table.concat(out)
-            end
-
-            local NormalizedFilterWords = {}
-
             local function RebuildFilterPatterns()
-                BackendState.FilterPatterns = {}
-                NormalizedFilterWords = {}
+                BackendState.FilterPatterns = { }
+
                 for _, Word in BackendState.FilterWords do
                     if type(Word) == "string" and Word ~= "" then
-                        local nw = NormalizeWord(Word)
-                        if nw ~= "" then
-                            NormalizedFilterWords[#NormalizedFilterWords + 1] = nw
+                        local Parts = { }
+
+                        for Index = 1, #Word do
+                            local Original = Word:sub(Index, Index)
+                            if Original:match("%a") then
+                                Parts[#Parts + 1] = "[" .. Original:upper() .. Original:lower() .. "]"
+                            else
+                                Parts[#Parts + 1] = Original:gsub("[%(%)%.%%%+%-%*%?%[%^%$]", "%%%1")
+                            end
                         end
+
+                        BackendState.FilterPatterns[#BackendState.FilterPatterns + 1] = "(" .. table.concat(Parts, "[^%a%d]*") .. ")"
                     end
                 end
             end
 
             local function FilterMessageText(Text, SenderId)
                 if IsAdminSender(SenderId) then return Text end
-                if #NormalizedFilterWords == 0 then return Text end
-
-                local stripped = Text:gsub(ZeroWidthPattern, "")
+                if #BackendState.FilterWords == 0 then return Text end
 
                 local CharMap = {}
-                for i = 1, #stripped do
-                    local c = stripped:sub(i, i)
-                    local n = NormalizeChar(c)
-                    if n:match("[%a%d]") then
-                        local last = CharMap[#CharMap]
-                        if not last or last.norm ~= n then
-                            CharMap[#CharMap + 1] = { norm = n, pos = i }
-                        end
+                for i = 1, #Text do
+                    local c = StringSub(Text, i, i)
+                    if c:match("[%a%d]") then
+                        CharMap[#CharMap + 1] = { ch = c:lower(), pos = i }
                     end
                 end
 
-                local NormText = {}
-                for _, e in CharMap do NormText[#NormText + 1] = e.norm end
-                NormText = table.concat(NormText)
+                local NormParts = table.create(#CharMap)
+                for i, Entry in CharMap do
+                    NormParts[i] = Entry.ch
+                end
+                local NormText = table.concat(NormParts)
 
                 local ResultBytes = {}
-                for i = 1, #stripped do
-                    ResultBytes[i] = stripped:sub(i, i)
+                for i = 1, #Text do
+                    ResultBytes[i] = StringSub(Text, i, i)
                 end
 
-                for _, NormWord in NormalizedFilterWords do
+                for _, Word in BackendState.FilterWords do
+                    if type(Word) ~= "string" or Word == "" then continue end
+                    local NormWord = Word:lower():gsub("[^%a%d]", "")
+                    if NormWord == "" then continue end
                     local WLen = #NormWord
                     local TLen = #NormText
                     local i = 1
                     while i <= TLen - WLen + 1 do
-                        if NormText:sub(i, i + WLen - 1) == NormWord then
+                        if StringSub(NormText, i, i + WLen - 1) == NormWord then
                             local StartPos = CharMap[i].pos
                             local EndPos = CharMap[i + WLen - 1].pos
                             for j = StartPos, EndPos do
