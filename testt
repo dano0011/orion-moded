@@ -1030,8 +1030,22 @@ local Library do
         self.SetFlags[Flag] = Setter
 
         if self.PendingFlags[Flag] ~= nil then
-            Setter(self.PendingFlags[Flag])
+            self:ApplyConfigValue(Setter, self.PendingFlags[Flag])
             self.PendingFlags[Flag] = nil
+        end
+    end
+
+    Library.ApplyConfigValue = function(self, Setter, Value)
+        if type(Value) == "table" then
+            if Value.Key then
+                Setter(Value)
+            elseif Value.Color then
+                Setter(Value.Color, Value.Alpha)
+            else
+                Setter(Value)
+            end
+        else
+            Setter(Value)
         end
     end
 
@@ -1042,17 +1056,7 @@ local Library do
         for i, v in next, decoded do
             local set = Library.SetFlags[i]
             if set then
-                if type(v) == "table" then
-                    if v.Key then
-                        set(v)
-                    elseif v.Color then
-                        set(v.Color, v.Alpha)
-                    else
-                        set(v)
-                    end
-                else
-                    set(v)
-                end
+                Library:ApplyConfigValue(set, v)
             else
                 Library.PendingFlags[i] = v
             end
