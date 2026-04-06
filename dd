@@ -184,7 +184,6 @@ local Library do
 
         Snowing = true,
         HideTooltips = false,
-        MuteNotifications = false,
 
         MarqueStyle = { 
             HoverDelay = 0.7,
@@ -1172,20 +1171,11 @@ local Library do
         end
     end
 
-    local ConfigIgnoreFlags = {
-        ConfigsList = true,
-        ConfigName = true,
-        ConfigAutoload = true
-    }
-
     Library.GetConfig = function(self)
         local Config = { } 
 
         local Success, Result = Library:SafeCall(function()
             for Index, Value in Library.Flags do 
-                if ConfigIgnoreFlags[Index] then
-                    continue
-                end
                 if type(Value) == "table" and Value.Key then
                     Config[Index] = {Key = tostring(Value.Key), Mode = Value.Mode}
                 elseif type(Value) == "table" and Value.Color then
@@ -1200,28 +1190,23 @@ local Library do
     end
 
     Library.LoadConfig = function(self, Config)
-        local ok, Decoded = pcall(HttpService.JSONDecode, HttpService, Config)
-        if not ok or not Decoded then return false, "Failed to decode config JSON" end
+        local Decoded = HttpService:JSONDecode(Config)
+        if not Decoded then return false end
 
         for Index, Value in next, Decoded do
-            if ConfigIgnoreFlags[Index] then
-                continue
-            end
             local SetFunction = Library.SetFlags[Index]
             if SetFunction then
-                pcall(function()
-                    if type(Value) == "table" then
-                        if Value.Key then
-                            SetFunction(Value)
-                        elseif Value.Color then
-                            SetFunction(Value.Color, Value.Alpha)
-                        else
-                            SetFunction(Value)
-                        end
+                if type(Value) == "table" then
+                    if Value.Key then
+                        SetFunction(Value)
+                    elseif Value.Color then
+                        SetFunction(Value.Color, Value.Alpha)
                     else
                         SetFunction(Value)
                     end
-                end)
+                else
+                    SetFunction(Value)
+                end
             end
         end
 
@@ -8572,14 +8557,12 @@ local Library do
             Name = "Load",
             Callback = function()
                 if ConfigSelected then
-                    local Success, Error = pcall(function()
-                        return Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected..".json"))
-                    end)
+                    local Success, Error = Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected..".json"))
 
                     if not Success then
                         Library:MakeNotification({
                             Name = "Error!",
-                            Content = "Failed to load configs, report this to the developers:\n"..tostring(Error),
+                            Content = "Failed to load configs, report this to the developers:\n"..Error,
                             Time = 10,
                         })
                     else
@@ -8628,9 +8611,7 @@ local Library do
             if AutoloadName then
                 local FilePath = Library.Folders.Configs .. "/" .. AutoloadName .. ".json"
                 if isfile(FilePath) then
-                    local Success, Error = pcall(function()
-                        return Library:LoadConfig(readfile(FilePath))
-                    end)
+                    local Success, Error = Library:LoadConfig(readfile(FilePath))
                     if Success then
                         pcall(function()
                             ConfigsDropdown:Set(AutoloadName)
