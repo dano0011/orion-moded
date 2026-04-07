@@ -727,9 +727,15 @@ local Library do
             local Gui = self.Instance
 
             local MouseLocation = UserInputService:GetMouseLocation()
-            local RenderStepped
+            local InputChangedConnection
+            local Items = { }
 
-            local Items = { } do
+            local function UpdateTooltipPosition()
+                MouseLocation = UserInputService:GetMouseLocation()
+                Items["Tooltip"].Instance.Position = UDim2New(0, MouseLocation.X + 8, 0, MouseLocation.Y - 35)
+            end
+
+            do
                 Items["Tooltip"] = Instances:Create("Frame", {
                     Parent = Library.Holder.Instance,
                     Name = "\0",
@@ -799,14 +805,19 @@ local Library do
 
             Library:Connect(Gui.MouseEnter, function()
                 if Library.HideTooltips then return end
-                Items["Tooltip"].Instance.Position = UDim2New(0, MouseLocation.X + 8, 0, MouseLocation.Y - 35)
+                UpdateTooltipPosition()
                 Items["Tooltip"]:Tween(nil, {BackgroundTransparency = 0})
                 Items["Text"]:Tween(nil, {TextTransparency = 0})
                 Items["UIStroke"]:Tween(nil, {Transparency = 0})
 
-                RenderStepped = RunService.RenderStepped:Connect(function()
-                    MouseLocation = UserInputService:GetMouseLocation()
-                    Items["Tooltip"].Instance.Position = UDim2New(0, MouseLocation.X + 8, 0, MouseLocation.Y - 35)
+                if InputChangedConnection then
+                    InputChangedConnection:Disconnect()
+                end
+
+                InputChangedConnection = UserInputService.InputChanged:Connect(function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+                        UpdateTooltipPosition()
+                    end
                 end)
             end)
 
@@ -815,9 +826,9 @@ local Library do
                 Items["Text"]:Tween(nil, {TextTransparency = 1})
                 Items["UIStroke"]:Tween(nil, {Transparency = 1})
 
-                if RenderStepped then 
-                    RenderStepped:Disconnect()
-                    RenderStepped = nil
+                if InputChangedConnection then 
+                    InputChangedConnection:Disconnect()
+                    InputChangedConnection = nil
                 end
             end)
 
@@ -829,9 +840,9 @@ local Library do
                             Items["Text"]:Tween(nil, {TextTransparency = 1})
                             Items["UIStroke"]:Tween(nil, {Transparency = 1})
 
-                            if RenderStepped then 
-                                RenderStepped:Disconnect()
-                                RenderStepped = nil
+                            if InputChangedConnection then 
+                                InputChangedConnection:Disconnect()
+                                InputChangedConnection = nil
                             end
                         end
                     end
@@ -940,7 +951,7 @@ local Library do
                         return
                     end
 
-                    Input.Changed:Connect(function()
+                    InputChanged = Input.Changed:Connect(function()
                         if Input.UserInputState == Enum.UserInputState.End then
                             Resizing = false
 
@@ -7630,6 +7641,7 @@ local Library do
             local RenderStepped
             local IsFirstOpen = false
             local OptionsUpdateConnection
+            local LastOptionsRefresh = 0
 
             function Dropdown:SetOpen(Bool)
                 if Debounce then 
@@ -7661,6 +7673,12 @@ local Library do
 
                     if type(Dropdown.Options) == "function" then
                         OptionsUpdateConnection = RunService.Heartbeat:Connect(function()
+                            local Now = os.clock()
+                            if Now - LastOptionsRefresh < 0.2 then
+                                return
+                            end
+                            LastOptionsRefresh = Now
+
                             pcall(function()
                                 local newOptions = Dropdown.Options()
                                 if type(newOptions) == "table" then
@@ -7696,6 +7714,12 @@ local Library do
                         end)
                     elseif type(Dropdown.Options) == "Instance" and (Dropdown.Options.ClassName == "Players" or Dropdown.Options:IsA("DataModel")) then
                         OptionsUpdateConnection = RunService.Heartbeat:Connect(function()
+                            local Now = os.clock()
+                            if Now - LastOptionsRefresh < 0.2 then
+                                return
+                            end
+                            LastOptionsRefresh = Now
+
                             local currentOptions = {}
                             for optionName, _ in pairs(Dropdown.OptionInstances) do
                                 currentOptions[optionName] = true
