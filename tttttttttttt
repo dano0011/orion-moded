@@ -5308,33 +5308,6 @@ local Library do
                 end
 
                 Debounce = false
-
-                --[[
-                local Descendants = Items["Page"].Instance:GetDescendants()
-                TableInsert(Descendants, Items["Page"].Instance)
-
-                local NewTween
-
-                for Index, Value in Descendants do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then 
-                        continue
-                    end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Page.Active, Library.FadeSpeed)
-                        end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Page.Active, Library.FadeSpeed)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                end)
-                --]]
             end
 
             function Page:SetVisibility(Bool)
@@ -5571,33 +5544,6 @@ local Library do
                 end
 
                 Debounce = false
-
-                --[[
-                local Descendants = Items["Page"].Instance:GetDescendants()
-                TableInsert(Descendants, Items["Page"].Instance)
-
-                local NewTween
-
-                for Index, Value in Descendants do 
-                    local TransparencyProperty = Tween:GetProperty(Value)
-
-                    if not TransparencyProperty then 
-                        continue
-                    end
-
-                    if type(TransparencyProperty) == "table" then 
-                        for _, Property in TransparencyProperty do 
-                            NewTween = Tween:FadeItem(Value, Property, Bool, Library.FadeSpeed)
-                        end
-                    else
-                        NewTween = Tween:FadeItem(Value, TransparencyProperty, Bool, Library.FadeSpeed)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
-                    Debounce = false
-                end)
-                --]]
             end
 
             Items["Inactive"]:Connect("InputBegan", function(Input)
@@ -6747,8 +6693,6 @@ local Library do
             TableInsert(PageSearchData, SearchData)
 
             Items["Toggle"]:Connect("InputBegan", function(Input)
-                -- debug
-                -- print(Input.UserInputType)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     if Toggle.Premium then return end
 
@@ -6757,32 +6701,6 @@ local Library do
                     end
                 end
             end)
-
-            -- debug
-            -- table.foreach(Toggle.Section.Items, warn)
-
-
-            --[[ debug
-            if Toggle.Section.Items.Content and Toggle.Section.Items.IsPlayerlist then
-                print("past 1")
-                local CheckIfPressed 
-                Items["Toggle"]:OnHover(function()
-                    CheckIfPressed = UserInputService.InputBegan:Connect(function(Input)
-                        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch and Library:IsMouseOverFrame(Items["Toggle"]) then
-                            if Toggle.Premium then return end
-                            Toggle:Set(not Toggle.Value)
-                            CheckIfPressed:Disconnect()
-                        end
-                    end)
-                end)
-
-                Items["Toggle"]:OnHoverLeave(function()
-                    if CheckIfPressed then
-                        CheckIfPressed:Disconnect()
-                    end
-                end)
-            end
-            --]]
             
             Library.SetFlags[Toggle.Flag] = function(Value)
                 Toggle:Set(Value)
@@ -7650,7 +7568,6 @@ local Library do
 
             local Debounce = false
             local RenderStepped
-            local IsFirstOpen = false
             local OptionsUpdateConnection
             local LastOptionsRefresh = 0
 
@@ -7661,10 +7578,6 @@ local Library do
 
                 self.IsOpen = Bool
                 Debounce = true 
-
-                if not IsFirstOpen then 
-                    IsFirstOpen = true
-                end
 
                 Items["OptionHolder"].Instance.Visible = self.IsOpen
                 Items["OptionHolder"].Instance.Parent = self.IsOpen and Library.Holder.Instance or Library.UnusedHolder.Instance
