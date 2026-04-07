@@ -4943,6 +4943,28 @@ local Library do
             end)
 
             if not IsMobile then
+                local function BindClosePromptButtonAnimation(Button, BaseSize, HoverSize, PressSize, BaseTransparency, HoverTransparency)
+                    Button:Connect("MouseEnter", function()
+                        Button:Tween(nil, {Size = HoverSize, TextTransparency = HoverTransparency})
+                    end)
+
+                    Button:Connect("MouseLeave", function()
+                        Button:Tween(nil, {Size = BaseSize, TextTransparency = BaseTransparency})
+                    end)
+
+                    Button:Connect("InputBegan", function(Input)
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                            Button:Tween(TweenInfo.new(0.12, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = PressSize})
+                        end
+                    end)
+
+                    Button:Connect("InputEnded", function(Input)
+                        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                            Button:Tween(nil, {Size = Library:IsMouseOverFrame(Button) and HoverSize or BaseSize, TextTransparency = Library:IsMouseOverFrame(Button) and HoverTransparency or BaseTransparency})
+                        end
+                    end)
+                end
+
                 Items["CloseButton"]:Connect("InputBegan", function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                         SetClosePromptOpen(true)
@@ -4967,13 +4989,23 @@ local Library do
                     CloseWindow()
                 end)
 
-                Items["ClosePromptOverlay"]:Connect("InputBegan", function(Input)
-                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-                        if not Library:IsMouseOverFrame(Items["ClosePrompt"]) then
-                            SetClosePromptOpen(false)
-                        end
-                    end
-                end)
+                BindClosePromptButtonAnimation(
+                    Items["ClosePromptCancel"],
+                    UDim2New(0.5, -21, 0, 34),
+                    UDim2New(0.5, -18, 0, 36),
+                    UDim2New(0.5, -16, 0, 32),
+                    0,
+                    0.08
+                )
+
+                BindClosePromptButtonAnimation(
+                    Items["ClosePromptConfirm"],
+                    UDim2New(0.5, -21, 0, 34),
+                    UDim2New(0.5, -18, 0, 36),
+                    UDim2New(0.5, -16, 0, 32),
+                    0,
+                    0.05
+                )
             end
             --
             Items["MinimizeButton"]:Connect("MouseEnter", function()
