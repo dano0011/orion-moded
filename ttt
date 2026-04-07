@@ -4495,7 +4495,7 @@ local Library do
                     Visible = false,
                     ZIndex = 48,
                     BackgroundColor3 = FromRGB(0, 0, 0),
-                    BackgroundTransparency = 1
+                    BackgroundTransparency = 0.4
                 })
 
                 Items["ClosePrompt"] = Instances:Create("Frame", {
@@ -4856,6 +4856,7 @@ local Library do
             end
 
             local function CloseWindow()
+                Window.CloseLocked = true
                 SetClosePromptOpen(false)
                 Window:SetOpen(false)
             end
@@ -4922,6 +4923,7 @@ local Library do
             Library:Connect(UserInputService.InputBegan, function(Input)
                 if tostring(Input.KeyCode) == Library.MenuKeybind or tostring(Input.UserInputType) == Library.MenuKeybind then
                     if UserInputService:GetFocusedTextBox() then return end
+                    if Window.CloseLocked and not Window.IsOpen then return end
                     Window:SetOpen(not Window.IsOpen)
                    
                     if Window.IsOpen then
