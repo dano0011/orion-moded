@@ -8769,12 +8769,6 @@ local Library do
             end
         })
 
-        local SharedConfigTextbox = ConfigsSection:AddTextbox({
-            Name = "Paste Shared Config",
-            Default = "",
-            Flag = "SharedConfigText",
-            Placeholder = "Paste config here..."
-        })
 
         ConfigsSection:AddToggle({
             Name = "Autoload Selected Config",
@@ -8785,70 +8779,6 @@ local Library do
                 if ConfigSelected then
                     Library:SetAutoload(ConfigSelected, Value)
                 end
-            end
-        })
-
-        ConfigsSection:AddButton({
-            Name = "Share Current",
-            Callback = function()
-                local CurrentConfig = Library:GetConfig()
-
-                if type(CurrentConfig) ~= "string" or CurrentConfig == "" then
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Failed to build the current config",
-                        Time = 3
-                    })
-                    return
-                end
-
-                SharedConfigTextbox:Set(CurrentConfig)
-
-                local Copied = false
-                if type(ClipboardSetter) == "function" then
-                    Copied = pcall(ClipboardSetter, CurrentConfig)
-                end
-
-                Library:MakeNotification({
-                    Name = "Success!",
-                    Content = Copied and "Current config copied to clipboard" or "Current config added to the textbox",
-                    Time = 3
-                })
-            end
-        })
-
-        ConfigsSection:AddButton({
-            Name = "Import Pasted",
-            Callback = function()
-                local PastedConfig = SharedConfigTextbox:Get()
-
-                if type(PastedConfig) ~= "string" or PastedConfig == "" then
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Paste a shared config first",
-                        Time = 3
-                    })
-                    return
-                end
-
-                local Success, Error = Library:LoadConfig(PastedConfig)
-
-                if not Success then
-                    Library:MakeNotification({
-                        Name = "Error!",
-                        Content = "Failed to import shared config:\n" .. tostring(Error),
-                        Time = 5
-                    })
-                    return
-                end
-
-                SharedConfigTextbox:Set(PastedConfig)
-
-                Library:MakeNotification({
-                    Name = "Success!",
-                    Content = "Imported shared config successfully",
-                    Time = 3
-                })
             end
         })
 
@@ -8960,6 +8890,80 @@ local Library do
                 })
             end
         })
+
+        ConfigsSection:AddDivider("Sharing configs")
+
+          local SharedConfigTextbox = ConfigsSection:AddTextbox({
+            Name = "Paste Shared Config",
+            Default = "",
+            Flag = "SharedConfigText",
+            Placeholder = "Paste config here..."
+        })
+
+        ConfigsSection:AddButton({
+            Name = "Share Current",
+            Callback = function()
+                local CurrentConfig = Library:GetConfig()
+
+                if type(CurrentConfig) ~= "string" or CurrentConfig == "" then
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Failed to build the current config",
+                        Time = 3
+                    })
+                    return
+                end
+
+                SharedConfigTextbox:Set(CurrentConfig)
+
+                local Copied = false
+                if type(ClipboardSetter) == "function" then
+                    Copied = pcall(ClipboardSetter, CurrentConfig)
+                end
+
+                Library:MakeNotification({
+                    Name = "Success!",
+                    Content = Copied and "Current config copied to clipboard" or "Current config added to the textbox",
+                    Time = 3
+                })
+            end
+        })
+
+        ConfigsSection:AddButton({
+            Name = "Import Pasted",
+            Callback = function()
+                local PastedConfig = SharedConfigTextbox:Get()
+
+                if type(PastedConfig) ~= "string" or PastedConfig == "" then
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Paste a shared config first",
+                        Time = 3
+                    })
+                    return
+                end
+
+                local Success, Error = Library:LoadConfig(PastedConfig)
+
+                if not Success then
+                    Library:MakeNotification({
+                        Name = "Error!",
+                        Content = "Failed to import shared config:\n" .. tostring(Error),
+                        Time = 5
+                    })
+                    return
+                end
+
+                SharedConfigTextbox:Set(PastedConfig)
+
+                Library:MakeNotification({
+                    Name = "Success!",
+                    Content = "Imported shared config successfully",
+                    Time = 3
+                })
+            end
+        })
+
         Library:RefreshConfigsList(ConfigsDropdown)
         Library._PendingAutoload = function()
             task.wait(1.5)
