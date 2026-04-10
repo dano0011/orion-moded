@@ -1629,9 +1629,13 @@ local Library do
             local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
             ResetTween:Play()
         end)
+    end
+
 
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
+            Flag = Data.Flag,
+
             IsOpen = false,
 
             Hue = 0,
@@ -1639,6 +1643,7 @@ local Library do
             Value = 0,
 
             Color = FromRGB(255, 255, 255),
+            HexValue = "#ffffff",
         }
 
         local Items = { } do
@@ -1650,6 +1655,7 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = "",
                 AutoButtonColor = false,
+                Size = UDim2New(0, 26, 1, 0),
                 BorderSizePixel = 0,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(169, 225, 255)
@@ -6677,37 +6683,12 @@ local Library do
                     Items["PremiumText"].Instance.Visible = false
                 end
 
-                local function GetAnimatedSectionItems()
-                    local AnimatedItems = { }
-
-                    if Section.Description ~= "" then
-                        TableInsert(AnimatedItems, Items["Description"].Instance)
-                    end
-
-                    TableInsert(AnimatedItems, Items["Content"].Instance)
-
-                    for _, Value in Items["Content"].Instance:GetDescendants() do
-                        TableInsert(AnimatedItems, Value)
-                    end
-
-                    if Section.Premium then
-                        TableInsert(AnimatedItems, Items["IsPremium"].Instance)
-                        TableInsert(AnimatedItems, Items["PremiumText"].Instance)
-                    end
-
-                    return AnimatedItems
-                end
-
-                local function UpdateSectionLayout(ShowContent)
+                local function UpdateSectionLayout()
                     local HasDescription = Section.Description ~= ""
-                    local ContentVisible = ShowContent
+                    local DescriptionVisible = Section.IsOpen and HasDescription
 
-                    if ContentVisible == nil then
-                        ContentVisible = Section.IsOpen
-                    end
-
-                    Items["Description"].Instance.Visible = HasDescription and ContentVisible
-                    Items["Content"].Instance.Visible = ContentVisible
+                    Items["Description"].Instance.Visible = DescriptionVisible
+                    Items["Content"].Instance.Visible = Section.IsOpen
                     Items["Arrow"].Instance.Rotation = Section.IsOpen and 90 or 0
 
                     if HasDescription then
@@ -6716,11 +6697,11 @@ local Library do
                         Items["Content"].Instance.Position = UDim2New(0, 8, 0, 35)
                     end
 
-                    Items["Toggle"].Instance.Size = UDim2New(1, 0, 0, ContentVisible and Items["Content"].Instance.Position.Y.Offset or 35)
+                    Items["Toggle"].Instance.Size = UDim2New(1, 0, 0, Section.IsOpen and Items["Content"].Instance.Position.Y.Offset or 35)
 
                     if Section.Premium then
-                        Items["IsPremium"].Instance.Visible = ContentVisible
-                        Items["PremiumText"].Instance.Visible = ContentVisible
+                        Items["IsPremium"].Instance.Visible = Section.IsOpen
+                        Items["PremiumText"].Instance.Visible = Section.IsOpen
                         Items["IsPremium"].Instance.Size = UDim2New(1, -4, 0, Items["Content"].Instance.AbsoluteSize.Y + 4)
                         Items["IsPremium"].Instance.Position = UDim2New(0, 2, 0, Items["Content"].Instance.Position.Y.Offset - 4)
                     end
@@ -6728,37 +6709,7 @@ local Library do
 
                 function Section:SetOpen(Bool)
                     self.IsOpen = Bool
-                    self._FadeToken = (self._FadeToken or 0) + 1
-
-                    local FadeToken = self._FadeToken
-                    local AnimatedItems
-
-                    UpdateSectionLayout(true)
-                    AnimatedItems = GetAnimatedSectionItems()
-
-                    for _, Item in AnimatedItems do
-                        local TransparencyProperty = Tween:GetProperty(Item)
-
-                        if TransparencyProperty then
-                            if type(TransparencyProperty) == "table" then
-                                for _, Property in TransparencyProperty do
-                                    Tween:FadeItem(Item, Property, Bool, 0.16)
-                                end
-                            else
-                                Tween:FadeItem(Item, TransparencyProperty, Bool, 0.16)
-                            end
-                        end
-                    end
-
-                    if not Bool then
-                        task.delay(0.16, function()
-                            if not Library or self._FadeToken ~= FadeToken or self.IsOpen then
-                                return
-                            end
-
-                            UpdateSectionLayout(false)
-                        end)
-                    end
+                    UpdateSectionLayout()
                 end
 
                 Items["Section"]:Connect("Changed", function(Property)
