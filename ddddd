@@ -6691,6 +6691,14 @@ local Library do
                     Items["Content"].Instance.Visible = Section.IsOpen
                     Items["Arrow"].Instance.Rotation = Section.IsOpen and 90 or 0
 
+                    if Section.IsOpen then
+                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0)
+                        Items["Text"].Instance.Position = UDim2New(0, 8, 0, -7)
+                    else
+                        Items["Text"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                        Items["Text"].Instance.Position = UDim2New(0, 8, 0, 17)
+                    end
+
                     if HasDescription then
                         Items["Content"].Instance.Position = UDim2New(0, 8, 0, Items["Description"].Instance.AbsoluteSize.Y + Items["Text"].Instance.AbsoluteSize.Y / 1.5 + Addition)
                     else
