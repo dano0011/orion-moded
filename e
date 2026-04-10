@@ -1629,7 +1629,6 @@ local Library do
             local ResetTween = Tween:Create(Text, nil, {Position = UDim2New(0, OriginalXOffset, OriginalAnchorPoint.Y, 0)}, false, false)
             ResetTween:Play()
         end)
-    end
 
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
