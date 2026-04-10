@@ -1,12 +1,3 @@
---[[
-    dan/onion ui (orion remake)
-    made by samet
-
-    example/documentation is at the bottom
-
-    date: 19.07.2025
-]]
-
 if getgenv().Library then
     getgenv().Library:Unload()
 end
@@ -109,6 +100,7 @@ local Library do
     local MathSin = math.sin
 
     local OsDate = os.date
+    local OsClock = os.clock
 
     local TableInsert = table.insert
     local TableFind = table.find
@@ -1486,11 +1478,30 @@ local Library do
             return
         end
 
-        local Token = (self._AutoSaveToken or 0) + 1
-        self._AutoSaveToken = Token
+        self._AutoSaveQueuedAt = OsClock()
 
-        task.delay(0.35, function()
-            if not Library or Library._AutoSaveToken ~= Token then
+        if self._AutoSaveQueued then
+            return
+        end
+
+        self._AutoSaveQueued = true
+
+        task.spawn(function()
+            while Library and Library._AutoSaveQueued do
+                if OsClock() - (Library._AutoSaveQueuedAt or 0) >= 0.35 then
+                    break
+                end
+
+                task.wait(0.1)
+            end
+
+            if not Library then
+                return
+            end
+
+            Library._AutoSaveQueued = false
+
+            if not Library.AutoSaveReady or Library.AutoSaveApplying or not Library:IsAutoSaveEnabled() then
                 return
             end
 
@@ -2148,9 +2159,13 @@ local Library do
                 end
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
+            if NewTween and NewTween.Tween then
+                NewTween.Tween.Completed:Once(function()
+                    Debounce = false
+                end)
+            else
                 Debounce = false
-            end)
+            end
         end
 
         Items["ColorpickerButton"]:Connect("MouseButton1Click", function()
@@ -2719,9 +2734,13 @@ local Library do
                 end
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
+            if NewTween and NewTween.Tween then
+                NewTween.Tween.Completed:Once(function()
+                    Debounce = false
+                end)
+            else
                 Debounce = false
-            end)
+            end
         end
 
         Items["KeyButton"]:Connect("MouseButton2Down", function()
@@ -5146,10 +5165,15 @@ local Library do
                     end
                 end
 
-                Library:Connect(NewTween.Tween.Completed, function()
+                if NewTween and NewTween.Tween then
+                    NewTween.Tween.Completed:Once(function()
+                        Debounce = false
+                        Items["MainFrame"].Instance.Visible = Window.IsOpen
+                    end)
+                else
                     Debounce = false
                     Items["MainFrame"].Instance.Visible = Window.IsOpen
-                end)
+                end
             end
 
             function Window:SetStreamerMode(Bool)
@@ -7935,9 +7959,13 @@ local Library do
                     end
                 end
 
-                Library:Connect(NewTween.Tween.Completed, function()
+                if NewTween and NewTween.Tween then
+                    NewTween.Tween.Completed:Once(function()
+                        Debounce = false
+                    end)
+                else
                     Debounce = false
-                end)
+                end
             end
             
             function Dropdown:Remove(Option)
@@ -9080,6 +9108,7 @@ local Library do
 
         ConfigsSection:AddToggle({
             Name = "Auto Save Config",
+            ToolTip = "Automatically saves your config every time you make a change, and loads it when you execute the script.",
             Flag = "AutoSaveConfig",
             Default = Library:IsAutoSaveEnabled(),
             Callback = function(Value)
@@ -9796,17 +9825,10 @@ local Library do
 end
 
 getgenv().Library = Library
-        task.defer(function()
-            task.wait(1)
-            if Library._PendingAutoload then
-                Library:SafeCall(Library._PendingAutoload)
-                Library._PendingAutoload = nil
-            end
-        end)
 
 task.defer(function()
     task.wait(1)
-    if Library._PendingAutoload then
+    if Library and Library._PendingAutoload then
         Library:SafeCall(Library._PendingAutoload)
         Library._PendingAutoload = nil
     end
