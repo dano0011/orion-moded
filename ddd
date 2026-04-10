@@ -6457,6 +6457,7 @@ local Library do
                 Description = Data.Description or Data.Description or "",
                 Side = Data.Side or Data.side or 1,
                 Premium = Data.Premium or Data.premium or false,
+                IsOpen = false,
 
                 Items = { }
             }
@@ -6546,6 +6547,36 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
+                Items["Toggle"] = Instances:Create("TextButton", {
+                    Parent = Items["Section"].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(255, 255, 255),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(1, -26, 0, 6),
+                    Size = UDim2New(0, 18, 0, 18),
+                    BorderSizePixel = 0,
+                    TextSize = 14,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Arrow"] = Instances:Create("ImageLabel", {
+                    Parent = Items["Toggle"].Instance,
+                    Name = "\0",
+                    ImageColor3 = FromRGB(255, 255, 255),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Image = getAsset("72579423244522.png"),
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 16, 0, 16),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Arrow"]:AddToTheme({ImageColor3 = "Text"})
+
                 Items["Description"] = Instances:Create("TextLabel", {
                     Parent = Items["Section"].Instance,
                     Name = "\0",
@@ -6630,6 +6661,8 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
+                Items["Content"].Instance.Visible = false
+
                 if Section.Description == "" then
                     Items["Content"].Instance.Position = UDim2New(0, 8, 0, 15)
                 end
@@ -6644,18 +6677,48 @@ local Library do
                 if Section.Premium then
                     Items["IsPremium"].Instance.Size = UDim2New(1, -4, 0, Items["Content"].Instance.AbsoluteSize.Y + 4)
                     Items["IsPremium"].Instance.Position = UDim2New(0, 2, 0, Items["Content"].Instance.Position.Y.Offset - 4)
+                    Items["IsPremium"].Instance.Visible = false
+                    Items["PremiumText"].Instance.Visible = false
+                end
+
+                local function UpdateSectionLayout()
+                    local HasDescription = Section.Description ~= ""
+                    local DescriptionVisible = Section.IsOpen and HasDescription
+
+                    Items["Description"].Instance.Visible = DescriptionVisible
+                    Items["Content"].Instance.Visible = Section.IsOpen
+                    Items["Arrow"].Instance.Rotation = Section.IsOpen and 90 or 0
+
+                    if HasDescription then
+                        Items["Content"].Instance.Position = UDim2New(0, 8, 0, Items["Description"].Instance.AbsoluteSize.Y + Items["Text"].Instance.AbsoluteSize.Y / 1.5 + Addition)
+                    else
+                        Items["Content"].Instance.Position = UDim2New(0, 8, 0, 15)
+                    end
+
+                    if Section.Premium then
+                        Items["IsPremium"].Instance.Visible = Section.IsOpen
+                        Items["PremiumText"].Instance.Visible = Section.IsOpen
+                        Items["IsPremium"].Instance.Size = UDim2New(1, -4, 0, Items["Content"].Instance.AbsoluteSize.Y + 4)
+                        Items["IsPremium"].Instance.Position = UDim2New(0, 2, 0, Items["Content"].Instance.Position.Y.Offset - 4)
+                    end
+                end
+
+                function Section:SetOpen(Bool)
+                    self.IsOpen = Bool
+                    UpdateSectionLayout()
                 end
 
                 Items["Section"]:Connect("Changed", function(Property)
                     if Property == "Size" or Property == "AbsoluteSize" and Section.Description ~= "" then
-                        Items["Content"].Instance.Position = UDim2New(0, 8, 0, Items["Description"].Instance.AbsoluteSize.Y + Items["Text"].Instance.AbsoluteSize.Y / 1.5 + Addition)
-                        
-                        if Section.Premium then
-                            Items["IsPremium"].Instance.Size = UDim2New(1, -4, 0, Items["Content"].Instance.AbsoluteSize.Y + 4)
-                            Items["IsPremium"].Instance.Position = UDim2New(0, 2, 0, Items["Content"].Instance.Position.Y.Offset - 4)
-                        end
+                        UpdateSectionLayout()
                     end
                 end)
+
+                Items["Toggle"]:Connect("MouseButton1Click", function()
+                    Section:SetOpen(not Section.IsOpen)
+                end)
+
+                UpdateSectionLayout()
 
                 Section.Items = Items
             end
