@@ -6556,9 +6556,10 @@ local Library do
                     Text = "",
                     AutoButtonColor = false,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(1, -26, 0, 6),
-                    Size = UDim2New(0, 18, 0, 18),
+                    Position = UDim2New(0, 0, 0, 0),
+                    Size = UDim2New(1, 0, 0, 35),
                     BorderSizePixel = 0,
+                    ZIndex = 2,
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
@@ -6571,8 +6572,9 @@ local Library do
                     AnchorPoint = Vector2New(0.5, 0.5),
                     Image = getAsset("72579423244522.png"),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Position = UDim2New(1, -17, 0.5, 0),
                     Size = UDim2New(0, 16, 0, 16),
+                    ZIndex = 3,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Arrow"]:AddToTheme({ImageColor3 = "Text"})
@@ -6694,6 +6696,8 @@ local Library do
                     else
                         Items["Content"].Instance.Position = UDim2New(0, 8, 0, 15)
                     end
+
+                    Items["Toggle"].Instance.Size = UDim2New(1, 0, 0, Section.IsOpen and Items["Content"].Instance.Position.Y.Offset or 35)
 
                     if Section.Premium then
                         Items["IsPremium"].Instance.Visible = Section.IsOpen
