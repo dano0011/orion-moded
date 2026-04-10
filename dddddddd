@@ -1631,11 +1631,8 @@ local Library do
         end)
     end
 
-
     Library.CreateColorpicker = function(self, Data)
         local Colorpicker = {
-            Flag = Data.Flag,
-
             IsOpen = false,
 
             Hue = 0,
@@ -1643,7 +1640,6 @@ local Library do
             Value = 0,
 
             Color = FromRGB(255, 255, 255),
-            HexValue = "#ffffff",
         }
 
         local Items = { } do
@@ -1655,7 +1651,6 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = "",
                 AutoButtonColor = false,
-                Size = UDim2New(0, 26, 1, 0),
                 BorderSizePixel = 0,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(169, 225, 255)
@@ -6712,8 +6707,9 @@ local Library do
                         ContentVisible = Section.IsOpen
                     end
 
-                    Items["Description"].Instance.Visible = ContentVisible and HasDescription
+                    Items["Description"].Instance.Visible = HasDescription and ContentVisible
                     Items["Content"].Instance.Visible = ContentVisible
+                    Items["Arrow"].Instance.Rotation = Section.IsOpen and 90 or 0
 
                     if HasDescription then
                         Items["Content"].Instance.Position = UDim2New(0, 8, 0, Items["Description"].Instance.AbsoluteSize.Y + 30)
@@ -6733,20 +6729,13 @@ local Library do
 
                 function Section:SetOpen(Bool)
                     self.IsOpen = Bool
-                    self._AnimationToken = (self._AnimationToken or 0) + 1
+                    self._FadeToken = (self._FadeToken or 0) + 1
 
-                    local AnimationToken = self._AnimationToken
+                    local FadeToken = self._FadeToken
                     local AnimatedItems
 
-                    if Bool then
-                        UpdateSectionLayout(true)
-                        AnimatedItems = GetAnimatedSectionItems()
-                    else
-                        UpdateSectionLayout(true)
-                        AnimatedItems = GetAnimatedSectionItems()
-                    end
-
-                    Items["Arrow"]:Tween(TweenInfo.new(0.18, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Rotation = Bool and 90 or 0})
+                    UpdateSectionLayout(true)
+                    AnimatedItems = GetAnimatedSectionItems()
 
                     for _, Item in AnimatedItems do
                         local TransparencyProperty = Tween:GetProperty(Item)
@@ -6754,17 +6743,17 @@ local Library do
                         if TransparencyProperty then
                             if type(TransparencyProperty) == "table" then
                                 for _, Property in TransparencyProperty do
-                                    Tween:FadeItem(Item, Property, Bool, 0.18)
+                                    Tween:FadeItem(Item, Property, Bool, 0.16)
                                 end
                             else
-                                Tween:FadeItem(Item, TransparencyProperty, Bool, 0.18)
+                                Tween:FadeItem(Item, TransparencyProperty, Bool, 0.16)
                             end
                         end
                     end
 
                     if not Bool then
-                        task.delay(0.18, function()
-                            if not Library or self._AnimationToken ~= AnimationToken or self.IsOpen then
+                        task.delay(0.16, function()
+                            if not Library or self._FadeToken ~= FadeToken or self.IsOpen then
                                 return
                             end
 
