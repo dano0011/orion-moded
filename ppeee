@@ -7480,6 +7480,12 @@ local Library do
                 OptionOrder = { },
             }
 
+            local SelectAllHeight = IsMobile and 16 or 17
+            local SelectAllWidth = IsMobile and 74 or 82
+            local SelectAllIndicatorSize = IsMobile and 12 or 14
+            local SelectAllCheckSize = IsMobile and 7 or 8
+            local SelectAllBottomPadding = IsMobile and 5 or 6
+
             local Items = { } do
                 Items["Dropdown"] = Instances:Create("Frame", {
                     Parent = Dropdown.Section.Items["Content"].Instance,
@@ -7614,7 +7620,7 @@ local Library do
                     MidImage = getAsset("105444659140695.png"),
                     BorderColor3 = FromRGB(0, 0, 0),
                     ScrollBarThickness = 2,
-                    Size = Dropdown.Multi and UDim2New(1, -12, 1, -78) or UDim2New(1, -12, 1, -51),
+                    Size = Dropdown.Multi and UDim2New(1, -12, 1, -(48 + SelectAllHeight + SelectAllBottomPadding)) or UDim2New(1, -12, 1, -51),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 6, 0, 45),
                     BottomImage = getAsset("105444659140695.png"),
@@ -7704,8 +7710,8 @@ local Library do
                         Parent = Items["OptionHolder"].Instance,
                         Name = "\0",
                         AnchorPoint = Vector2New(1, 1),
-                        Position = UDim2New(1, -8, 1, -8),
-                        Size = UDim2New(0, 92, 0, 18),
+                        Position = UDim2New(1, -6, 1, -SelectAllBottomPadding),
+                        Size = UDim2New(0, SelectAllWidth, 0, SelectAllHeight),
                         BackgroundTransparency = 1,
                         BorderSizePixel = 0,
                         Text = "",
@@ -7719,7 +7725,7 @@ local Library do
                         Name = "\0",
                         AnchorPoint = Vector2New(0, 0.5),
                         Position = UDim2New(0, 0, 0.5, 0),
-                        Size = UDim2New(0, 14, 0, 14),
+                        Size = UDim2New(0, SelectAllIndicatorSize, 0, SelectAllIndicatorSize),
                         BackgroundColor3 = FromRGB(41, 40, 49),
                         BorderSizePixel = 0,
                         BackgroundTransparency = 0,
@@ -7760,17 +7766,17 @@ local Library do
                     Items["SelectAllText"] = Instances:Create("TextLabel", {
                         Parent = Items["SelectAll"].Instance,
                         Name = "\0",
-                        AnchorPoint = Vector2New(1, 0.5),
-                        Position = UDim2New(1, 0, 0.5, 0),
-                        Size = UDim2New(1, -20, 1, 0),
+                        AnchorPoint = Vector2New(0, 0.5),
+                        Position = UDim2New(0, SelectAllIndicatorSize + 4, 0.5, 0),
+                        Size = UDim2New(1, -(SelectAllIndicatorSize + 4), 1, 0),
                         BackgroundTransparency = 1,
                         BorderSizePixel = 0,
                         FontFace = Library.Font,
                         Text = "Select All",
                         TextColor3 = FromRGB(255, 255, 255),
-                        TextSize = 13,
+                        TextSize = IsMobile and 12 or 13,
                         TextTransparency = 0.4,
-                        TextXAlignment = Enum.TextXAlignment.Right,
+                        TextXAlignment = Enum.TextXAlignment.Left,
                         ZIndex = 2,
                         BackgroundColor3 = FromRGB(255, 255, 255)
                     })  Items["SelectAllText"]:AddToTheme({TextColor3 = "Text"})
@@ -7825,7 +7831,7 @@ local Library do
                     Items["SelectAllIndicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
                     Items["SelectAllIndicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
                     Items["SelectAllText"]:Tween(nil, {TextTransparency = 0})
-                    Items["SelectAllCheck"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 0, Size = UDim2New(0, 8, 0, 8)})
+                    Items["SelectAllCheck"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 0, Size = UDim2New(0, SelectAllCheckSize, 0, SelectAllCheckSize)})
                 else
                     Items["SelectAllIndicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                     Items["SelectAllIndicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
