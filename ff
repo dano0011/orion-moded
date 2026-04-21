@@ -9628,6 +9628,16 @@ local Library do
                 Library.HideTooltips = Value
             end
         })
+
+        SettingsSection:AddToggle({
+            Name = "Streamer Mode",
+            Flag = "StreamerMode",
+            ToolTip = "Hides your username & profile at the bottom left of the script with anonymous",
+            Default = false,
+            Callback = function(Value)
+                Library.WindowItem:SetStreamerMode(Value)
+            end
+        })
     end
 
     Library.CreateHomeTab = function(self, Window, DiscordLink)
