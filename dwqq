@@ -940,7 +940,7 @@ local Library do
 
             Library:Connect(UserInputService.InputChanged, function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-                    if Dragging and (Input == DragInput or not DragInput or Input.UserInputType == DragInput.UserInputType) then
+                    if Dragging and (Input.UserInputType == Enum.UserInputType.MouseMovement or Input == DragInput) then
                         DragInput = Input
                     end
                 end
@@ -10098,7 +10098,7 @@ local Library do
                 Library:MakeNotification({
                     Name = "Success!",
                     Content = Message and ("Imported shared config with warnings\n" .. Message) or "Imported shared config successfully",
-                    Time = 3
+                    Time = 10
                 })
             end
         })
