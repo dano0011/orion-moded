@@ -234,6 +234,7 @@ local Library do
             CurrentLanguage = "English",
             CurrentCode = "en",
             Registry = { },
+            GeneratedSources = { },
             TextKeys = {
                 ["Settings"] = "settings_section",
                 ["customize however you want"] = "settings_description",
@@ -643,17 +644,84 @@ local Library do
         return Current[Key] or English[Key] or Key
     end
 
+    function Library:GetTextKey(SourceText)
+        SourceText = tostring(SourceText or "")
+
+        if SourceText == "" then
+            return nil
+        end
+
+        local Localization = self.Localization
+        local ExistingKey = Localization.TextKeys[SourceText]
+
+        if ExistingKey then
+            Localization.Translations.en[ExistingKey] = Localization.Translations.en[ExistingKey] or SourceText
+            return ExistingKey
+        end
+
+        local BaseKey = StringLower(SourceText)
+        BaseKey = StringGSub(BaseKey, "<.->", "")
+        BaseKey = StringGSub(BaseKey, "[^%w]+", "_")
+        BaseKey = StringGSub(BaseKey, "^_+", "")
+        BaseKey = StringGSub(BaseKey, "_+$", "")
+
+        if BaseKey == "" then
+            BaseKey = "text"
+        end
+
+        local FinalKey = BaseKey
+        local Suffix = 2
+
+        while Localization.GeneratedSources[FinalKey] and Localization.GeneratedSources[FinalKey] ~= SourceText do
+            FinalKey = BaseKey .. "_" .. tostring(Suffix)
+            Suffix = Suffix + 1
+        end
+
+        Localization.GeneratedSources[FinalKey] = SourceText
+        Localization.TextKeys[SourceText] = FinalKey
+        Localization.Translations.en[FinalKey] = Localization.Translations.en[FinalKey] or SourceText
+
+        return FinalKey
+    end
+
     function Library:GetLocalizedText(SourceText, Key)
         local Localization = self.Localization
         local English = Localization.Translations.en or { }
         local Current = Localization.Translations[Localization.CurrentCode] or English
-        local ResolvedKey = Key or Localization.TextKeys[SourceText]
+        local ResolvedKey = Key or self:GetTextKey(SourceText)
 
         if ResolvedKey then
             return Current[ResolvedKey] or English[ResolvedKey] or SourceText or ResolvedKey
         end
 
-        return Current[SourceText] or English[SourceText] or SourceText
+        return SourceText
+    end
+
+    function Library:AddTranslations(Language, Entries)
+        if type(Entries) ~= "table" then
+            return
+        end
+
+        local LocaleCode = self.Localization.Translations[Language] and Language or self:GetLocaleCode(Language)
+        local LocaleEntries = self.Localization.Translations[LocaleCode]
+
+        if type(LocaleEntries) ~= "table" then
+            LocaleEntries = { }
+            self.Localization.Translations[LocaleCode] = LocaleEntries
+        end
+
+        for SourceText, TranslatedText in Entries do
+            if type(TranslatedText) == "string" and TranslatedText ~= "" then
+                local Key = self:GetTextKey(SourceText)
+                if Key then
+                    LocaleEntries[Key] = TranslatedText
+                end
+            end
+        end
+
+        if LocaleCode == self.Localization.CurrentCode then
+            self:ApplyLocalization()
+        end
     end
 
     function Library:RegisterLocalizedInstance(Instance, Property, Key, SourceText)
