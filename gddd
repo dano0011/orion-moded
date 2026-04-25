@@ -6930,8 +6930,6 @@ local Library do
                 Toggle.Flag = Toggle.Name
             end
 
-            local IsHovered = false
-
             local Items = { } do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Toggle.Section.Items["Content"].Instance,
@@ -6954,7 +6952,7 @@ local Library do
                     AnchorPoint = Vector2New(0, 0.5),
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 32, 0, 18),
+                    Size = UDim2New(0, 18, 0, 18),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(41, 40, 49)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
@@ -6974,21 +6972,20 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
 
-                Items["Knob"] = Instances:Create("Frame", {
+                Items["Check"] = Instances:Create("ImageLabel", {
                     Parent = Items["Indicator"].Instance,
                     Name = "\0",
+                    ImageColor3 = FromRGB(0, 0, 0),
+                    ScaleType = Enum.ScaleType.Fit,
+                    ImageTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    AnchorPoint = Vector2New(0, 0.5),
-                    Position = UDim2New(0, 3, 0.5, 0),
-                    Size = UDim2New(0, 12, 0, 12),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Image = getAsset("116048588333795.png"),
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 0, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Knob"]:AddToTheme({BackgroundColor3 = "Text"})
-
-                Instances:Create("UICorner", {
-                    Parent = Items["Knob"].Instance,
-                    Name = "\0",
-                    CornerRadius = UDimNew(1, 0)
                 })
 
                 Items["Text"] = Instances:Create("TextLabel", {
@@ -7002,7 +6999,7 @@ local Library do
                     AnchorPoint = Vector2New(0, 0.5),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 40, 0.5, 0),
+                    Position = UDim2New(0, 26, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
@@ -7034,40 +7031,38 @@ local Library do
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
 
-                local function UpdateToggleVisuals()
-                    local IndicatorTheme = Toggle.Value and "Accent" or (IsHovered and "Hovered Element" or "Element")
-
-                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = IndicatorTheme})
-                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[IndicatorTheme]})
-                    Items["Text"]:Tween(nil, {TextTransparency = Toggle.Value and 0 or (IsHovered and 0.15 or 0.4)})
-                    Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                        Position = Toggle.Value and UDim2New(0, 17, 0.5, 0) or UDim2New(0, 3, 0.5, 0),
-                        Size = UDim2New(0, 12, 0, 12)
-                    })
-                end
-
                 Items["Toggle"]:OnHover(function()
-                    IsHovered = true
-                    UpdateToggleVisuals()
+                    if Toggle.Value then 
+                        return 
+                    end
+
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Hovered Element"]})
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element"})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
-                    IsHovered = false
-                    UpdateToggleVisuals()
+                    if Toggle.Value then 
+                        return 
+                    end
+
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Element"]})
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
                 end)
 
                 Items["Text"]:OnHover(function()
-                    IsHovered = true
-                    UpdateToggleVisuals()
+                    if Toggle.Value then 
+                        return
+                    end
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0})
                 end)
 
                 Items["Text"]:OnHoverLeave(function()
-                    IsHovered = false
-                    UpdateToggleVisuals()
-                end)
+                    if Toggle.Value then 
+                        return
+                    end
 
-                Items["Toggle"]:Connect("MouseButton1Down", function()
-                    Items["Knob"]:Tween(TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2New(0, 14, 0, 14)})
+                    Items["Text"]:Tween(nil, {TextTransparency = 0.5})
                 end)
             end
 
@@ -7096,13 +7091,21 @@ local Library do
                     end
                 end
 
-                Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = self.Value and "Accent" or "Element"})
-                Items["Indicator"]:Tween(nil, {BackgroundColor3 = self.Value and Library.Theme.Accent or Library.Theme.Element})
-                Items["Text"]:Tween(nil, {TextTransparency = self.Value and 0 or (IsHovered and 0.15 or 0.4)})
-                Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Position = self.Value and UDim2New(0, 17, 0.5, 0) or UDim2New(0, 3, 0.5, 0),
-                    Size = UDim2New(0, 12, 0, 12)
-                })
+                if self.Value then 
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0})
+
+                    Items["Check"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 0, Size = UDim2New(0, 8, 0, 8)})
+                else
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0.4})
+
+                    Items["Check"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
+                end
 
                 if self.Callback then
                     Library:SafeCall(self.Callback, self.Value)
@@ -8972,8 +8975,6 @@ local Library do
                 Value = false,
             }
 
-            local IsHovered = false
-
             local Items = { } do
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Toggle.Section.Items["Content"].Instance,
@@ -8998,7 +8999,7 @@ local Library do
                     AnchorPoint = Vector2New(0, 0.5),
                     Position = UDim2New(0, 0, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 32, 0, 18),
+                    Size = UDim2New(0, 18, 0, 18),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(41, 40, 49)
                 })  Items["Indicator"]:AddToTheme({BackgroundColor3 = "Element"})
@@ -9018,21 +9019,20 @@ local Library do
                     return RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, Library.Theme["Gradient"])}
                 end})
 
-                Items["Knob"] = Instances:Create("Frame", {
+                Items["Check"] = Instances:Create("ImageLabel", {
                     Parent = Items["Indicator"].Instance,
                     Name = "\0",
+                    ImageColor3 = FromRGB(0, 0, 0),
+                    ScaleType = Enum.ScaleType.Fit,
+                    ImageTransparency = 1,
                     BorderColor3 = FromRGB(0, 0, 0),
-                    AnchorPoint = Vector2New(0, 0.5),
-                    Position = UDim2New(0, 3, 0.5, 0),
-                    Size = UDim2New(0, 12, 0, 12),
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Image = getAsset("116048588333795.png"),
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 0, 0, 0),
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Knob"]:AddToTheme({BackgroundColor3 = "Text"})
-
-                Instances:Create("UICorner", {
-                    Parent = Items["Knob"].Instance,
-                    Name = "\0",
-                    CornerRadius = UDimNew(1, 0)
                 })
 
                 Items["Text"] = Instances:Create("TextLabel", {
@@ -9046,7 +9046,7 @@ local Library do
                     AnchorPoint = Vector2New(0, 0.5),
                     BorderSizePixel = 0,
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 40, 0.5, 0),
+                    Position = UDim2New(0, 26, 0.5, 0),
                     BorderColor3 = FromRGB(0, 0, 0),
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
@@ -9076,30 +9076,22 @@ local Library do
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
 
-                local function UpdateToggleVisuals()
-                    local IndicatorTheme = Toggle.Value and "Accent" or (IsHovered and "Hovered Element" or "Element")
-
-                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = IndicatorTheme})
-                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme[IndicatorTheme]})
-                    Items["Text"]:Tween(nil, {TextTransparency = Toggle.Value and 0 or (IsHovered and 0.15 or 0.4)})
-                    Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                        Position = Toggle.Value and UDim2New(0, 17, 0.5, 0) or UDim2New(0, 3, 0.5, 0),
-                        Size = UDim2New(0, 12, 0, 12)
-                    })
-                end
-
                 Items["Toggle"]:OnHover(function()
-                    IsHovered = true
-                    UpdateToggleVisuals()
+                    if Toggle.Value then
+                        return
+                    end
+
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Hovered Element"]})
                 end)
 
                 Items["Toggle"]:OnHoverLeave(function()
-                    IsHovered = false
-                    UpdateToggleVisuals()
-                end)
-
-                Items["Toggle"]:Connect("MouseButton1Down", function()
-                    Items["Knob"]:Tween(TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2New(0, 14, 0, 14)})
+                    if Toggle.Value then
+                        return
+                    end
+                    
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme["Element"]})
                 end)
             end
             
@@ -9128,13 +9120,21 @@ local Library do
                 Library.Flags[self.Flag] = self.Value
                 Library:QueueAutoSave()
 
-                Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = self.Value and "Accent" or "Element"})
-                Items["Indicator"]:Tween(nil, {BackgroundColor3 = self.Value and Library.Theme.Accent or Library.Theme.Element})
-                Items["Text"]:Tween(nil, {TextTransparency = self.Value and 0 or (IsHovered and 0.15 or 0.4)})
-                Items["Knob"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Position = self.Value and UDim2New(0, 17, 0.5, 0) or UDim2New(0, 3, 0.5, 0),
-                    Size = UDim2New(0, 12, 0, 12)
-                })
+                if self.Value then 
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Accent})
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0})
+
+                    Items["Check"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 0, Size = UDim2New(0, 8, 0, 8)})
+                else
+                    Items["Indicator"]:ChangeItemTheme({BackgroundColor3 = "Element"})
+                    Items["Indicator"]:Tween(nil, {BackgroundColor3 = Library.Theme.Element})
+
+                    Items["Text"]:Tween(nil, {TextTransparency = 0.4})
+
+                    Items["Check"]:Tween(TweenInfo.new(Library.Tween.Time, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {ImageTransparency = 1, Size = UDim2New(0, 0, 0, 0)})
+                end
 
                 if Colorpicker.Callback then
                     Library:SafeCall(Colorpicker.Callback, NewColorpicker.Color, Toggle.Value)
