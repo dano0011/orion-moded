@@ -234,6 +234,39 @@ local Library do
             CurrentLanguage = "English",
             CurrentCode = "en",
             Registry = { },
+            TextKeys = {
+                ["Settings"] = "settings_section",
+                ["customize however you want"] = "settings_description",
+                ["Language"] = "language_section",
+                ["change the language of the UI"] = "language_description",
+                ["UI language"] = "ui_language",
+                ["Animation speed"] = "animation_speed",
+                ["Animation style"] = "animation_style",
+                ["Animation direction"] = "animation_direction",
+                ["Unload"] = "unload",
+                ["Menu keybind"] = "menu_keybind",
+                ["UI Settings"] = "ui_settings",
+                ["Snowing"] = "snowing",
+                ["Hide Tooltips"] = "hide_tooltips",
+                ["Streamer Mode"] = "streamer_mode",
+                ["Themes"] = "themes_section",
+                ["make your very own ui colors"] = "themes_description",
+                ["Profiles"] = "profiles_section",
+                ["save and load configs"] = "profiles_description",
+                ["Sharing configs"] = "sharing_configs",
+                ["Player Tools"] = "player_tools",
+                ["Premium Access Only!"] = "premium_access_only",
+                ["Select All"] = "select_all",
+                ["Close window?"] = "close_window_title",
+                ["Are you sure you want to close the UI?"] = "close_window_message",
+                ["Close"] = "close",
+                ["Cancel"] = "cancel",
+                ["Search sections and items..."] = "search_sections",
+                ["Toggle"] = "keybind_toggle",
+                ["Hold"] = "keybind_hold",
+                ["Always"] = "keybind_always",
+                ["Home"] = "home_tab",
+            },
             Languages = {
                 "English",
                 "العربية",
@@ -290,6 +323,7 @@ local Library do
                     keybind_toggle = "Toggle",
                     keybind_hold = "Hold",
                     keybind_always = "Always",
+                    home_tab = "Home",
                 },
                 ar = {
                     settings_section = "الإعدادات",
@@ -322,6 +356,7 @@ local Library do
                     keybind_toggle = "تبديل",
                     keybind_hold = "ضغط",
                     keybind_always = "دائمًا",
+                    home_tab = "الرئيسية",
                 },
                 es = {
                     settings_section = "Ajustes",
@@ -354,6 +389,7 @@ local Library do
                     keybind_toggle = "Alternar",
                     keybind_hold = "Mantener",
                     keybind_always = "Siempre",
+                    home_tab = "Inicio",
                 },
                 fr = {
                     settings_section = "Paramètres",
@@ -386,6 +422,7 @@ local Library do
                     keybind_toggle = "Basculer",
                     keybind_hold = "Maintenir",
                     keybind_always = "Toujours",
+                    home_tab = "Accueil",
                 },
                 de = {
                     settings_section = "Einstellungen",
@@ -418,6 +455,7 @@ local Library do
                     keybind_toggle = "Umschalten",
                     keybind_hold = "Halten",
                     keybind_always = "Immer",
+                    home_tab = "Start",
                 },
                 pt = {
                     settings_section = "Configurações",
@@ -450,6 +488,7 @@ local Library do
                     keybind_toggle = "Alternar",
                     keybind_hold = "Segurar",
                     keybind_always = "Sempre",
+                    home_tab = "Início",
                 },
                 ru = {
                     settings_section = "Настройки",
@@ -482,6 +521,7 @@ local Library do
                     keybind_toggle = "Переключение",
                     keybind_hold = "Удержание",
                     keybind_always = "Всегда",
+                    home_tab = "Главная",
                 },
                 zh = {
                     settings_section = "设置",
@@ -514,6 +554,7 @@ local Library do
                     keybind_toggle = "切换",
                     keybind_hold = "按住",
                     keybind_always = "始终",
+                    home_tab = "主页",
                 },
                 ja = {
                     settings_section = "設定",
@@ -546,6 +587,7 @@ local Library do
                     keybind_toggle = "切り替え",
                     keybind_hold = "長押し",
                     keybind_always = "常時",
+                    home_tab = "ホーム",
                 },
                 ko = {
                     settings_section = "설정",
@@ -578,6 +620,7 @@ local Library do
                     keybind_toggle = "토글",
                     keybind_hold = "누르기",
                     keybind_always = "항상",
+                    home_tab = "홈",
                 },
             },
         },
@@ -600,19 +643,44 @@ local Library do
         return Current[Key] or English[Key] or Key
     end
 
-    function Library:RegisterLocalizedInstance(Instance, Property, Key)
-        if not Instance or not Property or not Key then
+    function Library:GetLocalizedText(SourceText, Key)
+        local Localization = self.Localization
+        local English = Localization.Translations.en or { }
+        local Current = Localization.Translations[Localization.CurrentCode] or English
+        local ResolvedKey = Key or Localization.TextKeys[SourceText]
+
+        if ResolvedKey then
+            return Current[ResolvedKey] or English[ResolvedKey] or SourceText or ResolvedKey
+        end
+
+        return Current[SourceText] or English[SourceText] or SourceText
+    end
+
+    function Library:RegisterLocalizedInstance(Instance, Property, Key, SourceText)
+        if not Instance or not Property then
             return
+        end
+
+        local ResolvedSourceText = SourceText
+
+        if ResolvedSourceText == nil then
+            pcall(function()
+                local Value = Instance[Property]
+                if type(Value) == "string" then
+                    ResolvedSourceText = Value
+                end
+            end)
         end
 
         TableInsert(self.Localization.Registry, {
             Instance = Instance,
             Property = Property,
             Key = Key,
+            SourceText = ResolvedSourceText,
         })
 
         pcall(function()
-            Instance[Property] = self:Translate(Key)
+            Instance[Property] = self:GetLocalizedText(ResolvedSourceText, Key)
         end)
     end
 
@@ -620,7 +688,7 @@ local Library do
         for _, Entry in self.Localization.Registry do
             if Entry.Instance and Entry.Instance.Parent then
                 pcall(function()
-                    Entry.Instance[Entry.Property] = self:Translate(Entry.Key)
+                    Entry.Instance[Entry.Property] = self:GetLocalizedText(Entry.SourceText, Entry.Key)
                 end)
             end
         end
@@ -5919,6 +5987,7 @@ local Library do
                     TextSize = 18,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Page.Name)
 
                 if Page.Icon then
                     Items["Icon"] = Instances:Create("ImageLabel", {
@@ -6073,6 +6142,7 @@ local Library do
                     TextSize = 12,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["PageSection"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["PageSection"].Instance, "Text", nil, Name)
 
                 Instances:Create("UIPadding", {
                     Parent = Items["PageSection"].Instance,
@@ -6137,6 +6207,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Page.Name)
 
                 Instances:Create("UIPadding", {
                     Parent = Items["Inactive"].Instance,
@@ -7124,9 +7195,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
-                if Section.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Section.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Section.LocaleKey, Section.Name)
 
                 Items["Toggle"] = Instances:Create("TextButton", {
                     Parent = Items["Section"].Instance,
@@ -7179,8 +7248,8 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
 
-                if Section.LocaleDescriptionKey then
-                    Library:RegisterLocalizedInstance(Items["Description"].Instance, "Text", Section.LocaleDescriptionKey)
+                if Section.Description ~= "" or Section.LocaleDescriptionKey then
+                    Library:RegisterLocalizedInstance(Items["Description"].Instance, "Text", Section.LocaleDescriptionKey, Section.Description)
                 end
 
                 Instances:Create("UIPadding", {
@@ -7422,9 +7491,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({BackgroundColor3 = "Text"})
 
-                if Toggle.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Toggle.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Toggle.LocaleKey, Toggle.Name)
                 
                 Items["Text"]:Tooltip(Toggle.Tooltip)
 
@@ -7699,9 +7766,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
-                if Button.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Button.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Button.LocaleKey, Button.Name)
 
                 Items["Buttons"]:OnHover(function()
                     Items["NewButton"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element"})
@@ -7806,9 +7871,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
-                if Slider.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Slider.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Slider.LocaleKey, Slider.Name)
 
                 Items["RealSlider"] = Instances:Create("TextButton", {
                     Parent = Items["Slider"].Instance,
@@ -8110,9 +8173,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
 
-                if Dropdown.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Dropdown.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Dropdown.LocaleKey, Dropdown.Name)
 
                 Items["RealDropdown"] = Instances:Create("TextButton", {
                     Parent = Items["Dropdown"].Instance,
@@ -8303,6 +8364,7 @@ local Library do
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Input"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Input"].Instance, "PlaceholderText", nil, "Search sections and items...")
 
                 if Dropdown.Multi then
                     Items["SelectAll"] = Instances:Create("TextButton", {
@@ -8995,10 +9057,9 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Colorpicker.Name)
 
-                if Label.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Label.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Label.LocaleKey, Label.Name)
 
                 Items["SubElements"] = Instances:Create("Frame", {
                     Parent = Items["Label"].Instance,
@@ -9163,6 +9224,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Textbox.Name)
 
                 Items["Background"] = Instances:Create("Frame", {
                     Parent = Items["Textbox"].Instance,
@@ -9208,6 +9270,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Inline"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Inline"].Instance, "PlaceholderText", nil, Textbox.Placeholder)
 
                 Items["Textbox"]:OnHover(function()
                     Items["Background"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element"})
@@ -9336,6 +9399,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Colorpicker.Name)
 
                 Items["SubElements"] = Instances:Create("Frame", {
                     Parent = Items["Label"].Instance,
@@ -9494,6 +9558,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({BackgroundColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Colorpicker.Name)
 
                 Items["SubElements"] = Instances:Create("Frame", {
                     Parent = Items["Toggle"].Instance,
@@ -9667,9 +9732,7 @@ local Library do
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text", BackgroundColor3 = "Inline"})
 
-                if Divider.LocaleKey then
-                    Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Divider.LocaleKey)
-                end
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", Divider.LocaleKey, Divider.Name)
 
                 Instances:Create("UIPadding", {
                     Parent = Items["Text"].Instance,
@@ -9740,6 +9803,7 @@ local Library do
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Text"].Instance, "Text", nil, Paragraph.Name)
 
                 Items["Description"] = Instances:Create("TextLabel", {
                     Parent = Items["Paragraph"].Instance,
@@ -9759,6 +9823,7 @@ local Library do
                     TextSize = 12,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Description"]:AddToTheme({TextColor3 = "Text"})
+                Library:RegisterLocalizedInstance(Items["Description"].Instance, "Text", nil, Paragraph.Description)
             end
 
             function Paragraph:Set(Text)
