@@ -6304,6 +6304,13 @@ local Library do
                     CornerRadius = UDimNew(0, 6)
                 })
 
+                Instances:Create("UIStroke", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(36, 33, 42),
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Border"})
+
                 Instances:Create("UIGradient", {
                     Parent = Items["Indicator"].Instance,
                     Name = "\0",
@@ -6999,6 +7006,13 @@ local Library do
                     Name = "\0",
                     CornerRadius = UDimNew(0, 6)
                 })
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(36, 33, 42),
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Border"})
 
                 Instances:Create("UIGradient", {
                     Parent = Items["Indicator"].Instance,
@@ -9088,6 +9102,13 @@ local Library do
                     Name = "\0",
                     CornerRadius = UDimNew(0, 6)
                 })
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Indicator"].Instance,
+                    Name = "\0",
+                    Color = FromRGB(36, 33, 42),
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Border"})
 
                 Instances:Create("UIGradient", {
                     Parent = Items["Indicator"].Instance,
