@@ -6441,6 +6441,9 @@ local Library do
                 },
             }
 
+            Playerlist.Page.Items["Searchbar"].Instance.Visible = false
+            Playerlist.Page.Items["Columns"].Instance.Size = UDim2New(1, 0, 1, 0)
+
             if Playerlist.Page.Columns ~= 1 then
                 error("Playerlist can only be in one column (Edit Columns property to 1)")
             end
