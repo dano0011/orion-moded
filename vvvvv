@@ -10366,10 +10366,10 @@ local Library do
                 BorderSizePixel = 0,
                 CanvasSize = UDim2New(0, 0, 0, 0),
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                ScrollBarThickness = 3,
-                TopImage = "rbxassetid://136419474381965",
-                MidImage = "rbxassetid://136419474381965",
-                BottomImage = "rbxassetid://136419474381965",
+                ScrollBarThickness = 2,
+                TopImage = "rbxassetid://105444659140695",
+                MidImage = "rbxassetid://105444659140695",
+                BottomImage = "rbxassetid://105444659140695",
                 ScrollBarImageColor3 = Library.Theme.Accent,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["HomeScroll"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
@@ -10741,7 +10741,7 @@ local Library do
                 AnchorPoint = Vector2New(0, 0),
                 Position = UDim2New(0, 12, 0, 300),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, -24, 0, 62),
+                Size = UDim2New(1, -24, 0, 58),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
             })  Items["ExecutorInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
@@ -10755,12 +10755,12 @@ local Library do
                 TextColor3 = FromRGB(255, 255, 255),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = "Executor: " .. getexecutorname(),
-                Size = UDim2New(1, -28, 0.5, 0),
+                Size = UDim2New(1, -24, 0, 18),
                 AnchorPoint = Vector2New(0, 0),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                TextYAlignment = Enum.TextYAlignment.Bottom,
-                Position = UDim2New(0, 12, 0, 2),
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Position = UDim2New(0, 12, 0, 10),
                 BorderSizePixel = 0,
                 TextSize = 15,
                 BackgroundColor3 = FromRGB(255, 255, 255)
@@ -10774,7 +10774,7 @@ local Library do
                 Parent = Items["ExecutorInfo"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 0.5),
-                Position = UDim2New(0, 14, 0, 42),
+                Position = UDim2New(0, 14, 0, 41),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(0, 8, 0, 8),
                 BorderSizePixel = 0,
@@ -10789,9 +10789,9 @@ local Library do
                 FontFace = Library.Font,
                 TextColor3 = supportColor,
                 Text = "Some features may not work properly.",
-                Size = UDim2New(1, -44, 0.5, 0),
+                Size = UDim2New(1, -42, 0, 14),
                 AnchorPoint = Vector2New(0, 0),
-                Position = UDim2New(0, 30, 0, 26),
+                Position = UDim2New(0, 30, 0, 34),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
@@ -10835,7 +10835,7 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["PerformanceTitle"]:AddToTheme({TextColor3 = "Text"})
 
-            Instances:Create("Frame", {
+            Items["HomeBottomSpacer"] = Instances:Create("Frame", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 0, 0, 486),
@@ -10990,6 +10990,42 @@ local Library do
                 end
             end
 
+            local function UpdateHomeLayout()
+                local stacked = Items["SessionInfo"].Instance.AbsoluteSize.X < 560
+
+                if stacked then
+                    Items["SessionInfo"].Instance.Size = UDim2New(1, -24, 0, 216)
+                    Items["Players"].Instance.Size = UDim2New(1, -20, 0, 48)
+                    Items["MaxPlayers"].Instance.AnchorPoint = Vector2New(0, 0)
+                    Items["MaxPlayers"].Instance.Position = UDim2New(0, 10, 0, 68)
+                    Items["MaxPlayers"].Instance.Size = UDim2New(1, -20, 0, 56)
+                    Items["AccountInformation"].Instance.AnchorPoint = Vector2New(0, 0)
+                    Items["AccountInformation"].Instance.Position = UDim2New(0, 10, 0, 136)
+                    Items["AccountInformation"].Instance.Size = UDim2New(1, -20, 0, 70)
+                else
+                    Items["SessionInfo"].Instance.Size = UDim2New(1, -24, 0, 160)
+                    Items["Players"].Instance.Size = UDim2New(0.44999998807907104, 0, 0.3499999940395355, 0)
+                    Items["MaxPlayers"].Instance.AnchorPoint = Vector2New(1, 0)
+                    Items["MaxPlayers"].Instance.Position = UDim2New(1, -18, 0, 12)
+                    Items["MaxPlayers"].Instance.Size = UDim2New(0.5, -16, 0.3499999940395355, 0)
+                    Items["AccountInformation"].Instance.AnchorPoint = Vector2New(0, 1)
+                    Items["AccountInformation"].Instance.Position = UDim2New(0, 10, 1, -10)
+                    Items["AccountInformation"].Instance.Size = UDim2New(1, -28, 0.44999998807907104, -20)
+                end
+
+                local y = 24
+                Items["SessionInfo"].Instance.Position = UDim2New(0, 12, 0, y)
+                y = y + Items["SessionInfo"].Instance.AbsoluteSize.Y + 16
+                Items["Discord"].Instance.Position = UDim2New(0, 12, 0, y)
+                y = y + Items["Discord"].Instance.AbsoluteSize.Y + 16
+                Items["ExecutorInfo"].Instance.Position = UDim2New(0, 12, 0, y)
+                y = y + Items["ExecutorInfo"].Instance.AbsoluteSize.Y + 18
+                Items["PerformanceTitle"].Instance.Position = UDim2New(0, 12, 0, y)
+                y = y + 20
+                Items["PerformanceInfo"].Instance.Position = UDim2New(0, 12, 0, y)
+                Items["HomeBottomSpacer"].Instance.Position = UDim2New(0, 0, 0, y + Items["PerformanceInfo"].Instance.AbsoluteSize.Y + 12)
+            end
+
             task.spawn(function()
                 local LastFPS, LastPing, LastShowFPS, LastShowPing
 
@@ -11024,6 +11060,8 @@ local Library do
                 end
             end)
 
+            Library:Connect(Items["HomeScroll"].Instance:GetPropertyChangedSignal("AbsoluteSize"), UpdateHomeLayout)
+            UpdateHomeLayout()
             UpdatePerformanceLayout()
         end
     end
