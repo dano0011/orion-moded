@@ -10361,7 +10361,7 @@ local Library do
             Items["HomeScroll"] = Instances:Create("ScrollingFrame", {
                 Parent = HomeTab.Items["Page"].Instance,
                 Name = "\0",
-                Size = UDim2New(1, -8, 1, -14),
+                Size = UDim2New(1, -8, 1, -24),
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 CanvasSize = UDim2New(0, 0, 0, 0),
