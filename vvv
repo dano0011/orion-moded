@@ -10358,12 +10358,28 @@ local Library do
         end
 
         local Items = { } do
-            Items["SessionInfo"] = Instances:Create("Frame", {
+            Items["HomeScroll"] = Instances:Create("ScrollingFrame", {
                 Parent = HomeTab.Items["Page"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 12, 0, 30),
+                Size = UDim2New(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                CanvasSize = UDim2New(0, 0, 0, 0),
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ScrollBarThickness = 3,
+                TopImage = "rbxassetid://136419474381965",
+                MidImage = "rbxassetid://136419474381965",
+                BottomImage = "rbxassetid://136419474381965",
+                ScrollBarImageColor3 = Library.Theme.Accent,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })  Items["HomeScroll"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+
+            Items["SessionInfo"] = Instances:Create("Frame", {
+                Parent = Items["HomeScroll"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, 12, 0, 24),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, -24, 0, 194),
+                Size = UDim2New(1, -24, 0, 160),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
             })  Items["SessionInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
@@ -10371,7 +10387,7 @@ local Library do
             AddHomeCorner(Items["SessionInfo"].Instance)
 
             Items["SessionInfoTitle"] = Instances:Create("TextLabel", {
-                Parent = HomeTab.Items["Page"].Instance,
+                Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
@@ -10380,7 +10396,7 @@ local Library do
                 Size = UDim2New(1, -16, 0, 15),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Position = UDim2New(0, 12, 0, 8),
+                Position = UDim2New(0, 12, 0, 4),
                 BorderSizePixel = 0,
                 TextTransparency = 0.35,
                 TextSize = 12,
@@ -10586,9 +10602,9 @@ local Library do
             Items["AccountMeta"]:AddToTheme({TextColor3 = "Text"})
 
             Items["Discord"] = Instances:Create("Frame", {
-                Parent = HomeTab.Items["Page"].Instance,
+                Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 12, 0, 238),
+                Position = UDim2New(0, 12, 0, 200),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, -24, 0, 84),
                 BorderSizePixel = 0,
@@ -10644,7 +10660,7 @@ local Library do
                 Size = UDim2New(0.28, 0, 0, 36),
                 BorderSizePixel = 0,
                 TextSize = 14,
-                BackgroundColor3 = FromRGB(118, 92, 255)
+                BackgroundColor3 = FromRGB(88, 101, 242)
             })
 
             Items["DiscordDescription"] = Instances:Create("TextLabel", {
@@ -10669,14 +10685,14 @@ local Library do
 
             Items["JoinDiscord"]:Connect("MouseEnter", function()
                 Items["JoinDiscord"]:Tween(nil, {
-                    BackgroundColor3 = FromRGB(132, 108, 255),
+                    BackgroundColor3 = FromRGB(102, 115, 255),
                     Size = UDim2New(0.29, 0, 0, 38)
                 })
             end)
 
             Items["JoinDiscord"]:Connect("MouseLeave", function()
                 Items["JoinDiscord"]:Tween(nil, {
-                    BackgroundColor3 = FromRGB(118, 92, 255),
+                    BackgroundColor3 = FromRGB(88, 101, 242),
                     Size = UDim2New(0.28, 0, 0, 36)
                 })
             end)
@@ -10720,10 +10736,10 @@ local Library do
             })  Items["JoinDıscordText"]:AddToTheme({TextColor3 = "Text"})
 
             Items["ExecutorInfo"] = Instances:Create("Frame", {
-                Parent = HomeTab.Items["Page"].Instance,
+                Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 0),
-                Position = UDim2New(0, 12, 0, 336),
+                Position = UDim2New(0, 12, 0, 300),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, -24, 0, 62),
                 BorderSizePixel = 0,
@@ -10758,7 +10774,7 @@ local Library do
                 Parent = Items["ExecutorInfo"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 0.5),
-                Position = UDim2New(0, 14, 0, 44),
+                Position = UDim2New(0, 14, 0, 42),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(0, 8, 0, 8),
                 BorderSizePixel = 0,
@@ -10775,7 +10791,7 @@ local Library do
                 Text = "Some features may not work properly.",
                 Size = UDim2New(1, -44, 0.5, 0),
                 AnchorPoint = Vector2New(0, 0),
-                Position = UDim2New(0, 30, 0, 32),
+                Position = UDim2New(0, 30, 0, 26),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Top,
@@ -10791,9 +10807,9 @@ local Library do
             end
 
             Items["PerformanceInfo"] = Instances:Create("Frame", {
-                Parent = HomeTab.Items["Page"].Instance,
+                Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 12, 0, 438),
+                Position = UDim2New(0, 12, 0, 400),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, -24, 0, 74),
                 BorderSizePixel = 0,
@@ -10803,7 +10819,7 @@ local Library do
             AddHomeCorner(Items["PerformanceInfo"].Instance)
 
             Items["PerformanceTitle"] = Instances:Create("TextLabel", {
-                Parent = HomeTab.Items["Page"].Instance,
+                Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
@@ -10812,12 +10828,22 @@ local Library do
                 Size = UDim2New(1, -16, 0, 15),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Position = UDim2New(0, 12, 0, 416),
+                Position = UDim2New(0, 12, 0, 380),
                 BorderSizePixel = 0,
                 TextTransparency = 0.35,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["PerformanceTitle"]:AddToTheme({TextColor3 = "Text"})
+
+            Instances:Create("Frame", {
+                Parent = Items["HomeScroll"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, 0, 0, 486),
+                Size = UDim2New(1, 0, 0, 1),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
 
             Items["FPSCard"] = Instances:Create("Frame", {
                 Parent = Items["PerformanceInfo"].Instance,
