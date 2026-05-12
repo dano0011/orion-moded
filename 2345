@@ -4994,14 +4994,6 @@ local Library do
             end)
         end
 
-        local function FormatTrialRemaining(remainingMs)
-            local totalSeconds = math.max(0, math.floor((tonumber(remainingMs) or 0) / 1000))
-            local hours = math.floor(totalSeconds / 3600)
-            local minutes = math.floor((totalSeconds % 3600) / 60)
-            local seconds = totalSeconds % 60
-            return hours > 0 and string.format("%02d:%02d:%02d", hours, minutes, seconds) or string.format("%02d:%02d", minutes, seconds)
-        end
-
         local function OpenPremiumInvite()
             local PremiumUrl = "https://express-hub.sellhub.cx/"
             local copied = setclipboard and pcall(setclipboard, PremiumUrl)
@@ -5658,7 +5650,7 @@ local Library do
             Data = Data or { }
             local TrialApi = type(self) == "table" and self.ShowTrialModal and self or Library
             local hasClaimedTrial
-            local TrialActive, TrialRemainingMs = false, 0
+            local TrialActive = false
             local configuredTrialMinutes = tonumber(Data.TrialTimeMinutes)
             if configuredTrialMinutes then
                 configuredTrialMinutes = math.max(1, math.floor(configuredTrialMinutes))
@@ -5675,7 +5667,7 @@ local Library do
                     return nil
                 end
 
-                TrialActive, TrialRemainingMs, hasClaimedTrial = TrialApi.CheckTrialStatus()
+                TrialActive, _, hasClaimedTrial = TrialApi.CheckTrialStatus()
                 if not TrialActive then
                     local alreadyUsed = hasClaimedTrial == true
                     local trialClaimed = TrialApi.ShowTrialModal(TrialTimeMinutes, alreadyUsed)
@@ -5687,7 +5679,7 @@ local Library do
                         return nil
                     end
                     TrialApi.TrialManager.Cached = false
-                    TrialActive, TrialRemainingMs = TrialApi.CheckTrialStatus()
+                    TrialActive = TrialApi.CheckTrialStatus()
                 end
             end
 
@@ -11546,7 +11538,7 @@ local Library do
                 TextColor3 = FromRGB(255, 255, 255),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = "Executor: " .. getexecutorname(),
-                Size = UDim2New(1, -140, 0, 18),
+                Size = UDim2New(1, -24, 0, 18),
                 AnchorPoint = Vector2New(0, 0),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -11556,38 +11548,6 @@ local Library do
                 TextSize = 15,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
-
-            Items["TrialRemainingText"] = Instances:Create("TextLabel", {
-                Parent = Items["ExecutorInfo"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(255, 255, 255),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = PremiumRequired and TrialActive and TrialRemainingMs > 0 and FormatTrialRemaining(TrialRemainingMs) or "",
-                Size = UDim2New(0, 116, 0, 18),
-                AnchorPoint = Vector2New(1, 0),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Right,
-                TextYAlignment = Enum.TextYAlignment.Top,
-                Position = UDim2New(1, -12, 0, 10),
-                BorderSizePixel = 0,
-                TextSize = 15,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["TrialRemainingText"]:AddToTheme({TextColor3 = "Text"})
-
-            if PremiumRequired and TrialActive and TrialRemainingMs > 0 then
-                task.spawn(function()
-                    local trialEndsAt = OsClock() + (TrialRemainingMs / 1000)
-                    while Items["TrialRemainingText"] and Items["TrialRemainingText"].Instance and Items["TrialRemainingText"].Instance.Parent do
-                        local remaining = math.max(0, math.floor((trialEndsAt - OsClock()) * 1000))
-                        Items["TrialRemainingText"].Instance.Text = remaining > 0 and FormatTrialRemaining(remaining) or ""
-                        if remaining <= 0 then
-                            break
-                        end
-                        task.wait(1)
-                    end
-                end)
-            end
 
             local exec = (identifyexecutor and identifyexecutor() or getexecutorname() or ""):lower()
             local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity")
