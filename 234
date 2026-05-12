@@ -11545,8 +11545,8 @@ local Library do
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Text = "Executor: " .. getexecutorname() .. (PremiumRequired and TrialActive and TrialRemainingMs > 0 and (" | Trial: " .. FormatTrialRemaining(TrialRemainingMs)) or ""),
-                Size = UDim2New(1, -24, 0, 18),
+                Text = "Executor: " .. getexecutorname(),
+                Size = UDim2New(1, -140, 0, 18),
                 AnchorPoint = Vector2New(0, 0),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -11557,12 +11557,30 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
 
+            Items["TrialRemainingText"] = Instances:Create("TextLabel", {
+                Parent = Items["ExecutorInfo"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(255, 255, 255),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = PremiumRequired and TrialActive and TrialRemainingMs > 0 and FormatTrialRemaining(TrialRemainingMs) or "",
+                Size = UDim2New(0, 116, 0, 18),
+                AnchorPoint = Vector2New(1, 0),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Position = UDim2New(1, -12, 0, 10),
+                BorderSizePixel = 0,
+                TextSize = 15,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })  Items["TrialRemainingText"]:AddToTheme({TextColor3 = "Text"})
+
             if PremiumRequired and TrialActive and TrialRemainingMs > 0 then
                 task.spawn(function()
                     local trialEndsAt = OsClock() + (TrialRemainingMs / 1000)
-                    while Items["BigExecutorText"] and Items["BigExecutorText"].Instance and Items["BigExecutorText"].Instance.Parent do
+                    while Items["TrialRemainingText"] and Items["TrialRemainingText"].Instance and Items["TrialRemainingText"].Instance.Parent do
                         local remaining = math.max(0, math.floor((trialEndsAt - OsClock()) * 1000))
-                        Items["BigExecutorText"].Instance.Text = "Executor: " .. getexecutorname() .. (remaining > 0 and (" | Trial: " .. FormatTrialRemaining(remaining)) or "")
+                        Items["TrialRemainingText"].Instance.Text = remaining > 0 and FormatTrialRemaining(remaining) or ""
                         if remaining <= 0 then
                             break
                         end
