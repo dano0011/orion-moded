@@ -5175,7 +5175,7 @@ local Library do
                 pw = 470,
                 ph = 255,
                 headerH = 42,
-                titleW = 155,
+                titleW = 185,
                 titleX = 14,
                 badgeW = 126,
                 badgeH = 22,
@@ -5200,7 +5200,7 @@ local Library do
                 pw = 540,
                 ph = 280,
                 headerH = 56,
-                titleW = 175,
+                titleW = 205,
                 titleX = 18,
                 badgeW = 150,
                 badgeH = 26,
@@ -5236,7 +5236,7 @@ local Library do
                 Name = "TrialModal",
                 AnchorPoint = Vector2New(0.5, 0.5),
                 Size = UDim2New(0, metrics.pw, 0, metrics.ph),
-                Position = UDim2New(0.5, 0, 0.5, 0),
+                Position = UDim2New(0.5, 0, 0.5, 10),
                 BackgroundColor3 = Library.Theme["Background"],
                 BorderSizePixel = 0,
                 ClipsDescendants = true
@@ -5262,7 +5262,7 @@ local Library do
 
             local HeaderTitle = Instances:Create("TextLabel", {
                 Parent = Header.Instance,
-                Text = "Express Hub",
+                Text = "🚀 Express Hub",
                 FontFace = Library.Font,
                 TextSize = metrics.bodyTitleSize - 6,
                 TextColor3 = Library.Theme["Text"],
