@@ -5236,7 +5236,7 @@ local Library do
                 Name = "TrialModal",
                 AnchorPoint = Vector2New(0.5, 0.5),
                 Size = UDim2New(0, metrics.pw, 0, metrics.ph),
-                Position = UDim2New(0.5, 0, 0.5, 10),
+                Position = UDim2New(0.5, 0, 0.5, 24),
                 BackgroundColor3 = Library.Theme["Background"],
                 BorderSizePixel = 0,
                 ClipsDescendants = true
@@ -5262,7 +5262,7 @@ local Library do
 
             local HeaderTitle = Instances:Create("TextLabel", {
                 Parent = Header.Instance,
-                Text = "🚀 Express Hub",
+                Text = "Express Hub",
                 FontFace = Library.Font,
                 TextSize = metrics.bodyTitleSize - 6,
                 TextColor3 = Library.Theme["Text"],
