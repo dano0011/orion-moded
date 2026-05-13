@@ -7533,17 +7533,8 @@ local Library do
 
             local function UpdatePlayerHealth(PlayerData)
                 local Character = PlayerData.Player.Character
-                local Humanoid = Character and PlayerData.Humanoid
-                if not (Humanoid and Humanoid.Parent == Character) then
-                    Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-                    PlayerData.Humanoid = Humanoid
-                end
-
-                local HealthText = FormatPlayerHealth(Humanoid and Humanoid.Health or 0)
-                if PlayerData.LastHealthText ~= HealthText then
-                    PlayerData.LastHealthText = HealthText
-                    PlayerData.PlayerStatus.Instance.Text = HealthText
-                end
+                local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+                PlayerData.PlayerStatus.Instance.Text = FormatPlayerHealth(Humanoid and Humanoid.Health or 0)
             end
 
             local function GetCharacterPosition(Character)
@@ -7557,19 +7548,6 @@ local Library do
                 end
 
                 return Character:GetPivot().Position
-            end
-
-            local PlayerAvatarCache = { }
-
-            local function GetPlayerAvatar(UserId)
-                local Avatar = PlayerAvatarCache[UserId]
-                if Avatar then
-                    return Avatar
-                end
-
-                Avatar = Players:GetUserThumbnailAsync(UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
-                PlayerAvatarCache[UserId] = Avatar
-                return Avatar
             end
 
             function Playerlist:Add(Player)
@@ -7658,14 +7636,12 @@ local Library do
 
                 local PlayerData = {
                     Name = Player.Name,
-                    SearchName = StringLower(Player.Name),
                     Selected = false,
                     PlayerButton = PlayerItems["NewPlayer"],
                     PlayerName = PlayerItems["Name"],
                     PlayerTeam = PlayerItems["Team"],
                     PlayerStatus = PlayerItems["Status"],
-                    Player = Player,
-                    LastHealthText = "0"
+                    Player = Player
                 }
 
                 UpdatePlayerHealth(PlayerData)
@@ -7691,7 +7667,7 @@ local Library do
 
                         PlayerData:Toggle("Active")
 
-                        local PlayerAvatar = GetPlayerAvatar(Playerlist.Player.UserId)
+                        local PlayerAvatar = Players:GetUserThumbnailAsync(Playerlist.Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
                         Items["Avatar"].Instance.Image = PlayerAvatar
                         Items["PlayerUsername"].Instance.Text = Playerlist.Player.DisplayName .. " (@" .. Playerlist.Player.Name .. ")"
                         Items["PlayerUserID"].Instance.Text = "User ID: "..tostring(Playerlist.Player.UserId)
@@ -7721,17 +7697,12 @@ local Library do
 
             local SearchStepped
             Items["Input"]:Connect("Focused", function()
-                if SearchStepped then
-                    SearchStepped:Disconnect()
-                end
-
                 local function FilterPlayers()
                     local query = StringLower(Items["Input"].Instance.Text)
                     for Index, Value in Playerlist.Players do
-                        Value.PlayerButton.Instance.Visible = query == "" or StringFind(Value.SearchName, query, 1, true) ~= nil
+                        Value.PlayerButton.Instance.Visible = query == "" or StringFind(StringLower(Value.PlayerName.Instance.Text), query, 1, true) ~= nil
                     end
                 end
-
                 FilterPlayers()
                 SearchStepped = Items["Input"].Instance:GetPropertyChangedSignal("Text"):Connect(FilterPlayers)
             end)
@@ -11958,8 +11929,6 @@ local Library do
             end
 
             task.spawn(function()
-                local WorkspaceHeartbeat = Stats.Workspace.Heartbeat
-                local DataPing = Stats.Network.ServerStatsItem["Data Ping"]
                 local LastFPS, LastPing, LastShowFPS, LastShowPing
 
                 while Library and Items["PerformanceInfo"] and Items["PerformanceInfo"].Instance and Items["PerformanceInfo"].Instance.Parent do
@@ -11973,7 +11942,7 @@ local Library do
                     end
 
                     if ShowFPS then
-                        local FPS = WorkspaceHeartbeat:GetValueString():match("^(%d+)") or "0"
+                        local FPS = Stats.Workspace.Heartbeat:GetValueString():match("^(%d+)") or "0"
                         local FPSText = "FPS: " .. FPS
                         if FPSText ~= LastFPS then
                             Items["FPSValue"].Instance.Text = FPSText
@@ -11982,7 +11951,7 @@ local Library do
                     end
 
                     if ShowPing then
-                        local PingText = "Ping: " .. MathFloor(DataPing:GetValue() + 0.5) .. " ms"
+                        local PingText = "Ping: " .. MathFloor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue() + 0.5) .. " ms"
                         if PingText ~= LastPing then
                             Items["PingValue"].Instance.Text = PingText
                             LastPing = PingText
