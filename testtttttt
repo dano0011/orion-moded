@@ -473,7 +473,8 @@ local library = {
 	configuration = {
 		hideKeybind = Enum.KeyCode.RightShift,
 		smoothDragging = false,
-		glowSize = 2,
+		glowSize = 8,
+		glowTransparency = 0.35,
 		easingStyle = Enum.EasingStyle.Quart,
 		easingDirection = Enum.EasingDirection.Out
 	},
@@ -799,8 +800,11 @@ do
 					library.Backdrop.ImageTransparency = (library_flags["__Designer.Background.ImageTransparency"] or 95) / 100
 				end
 				if library.Glow then
-					library.Glow.Thickness = math.max(tonumber(library.configuration.glowSize) or 0, 0)
-					library.Glow.Enabled = library.Glow.Thickness > 0
+					local glowSize = math.max(tonumber(library.configuration.glowSize) or 0, 0)
+					library.Glow.Visible = glowSize > 0
+					library.Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
+					library.Glow.Size = UDim2.new(1, glowSize * 2, 1, glowSize * 2)
+					library.Glow.ImageTransparency = math.clamp(tonumber(library.configuration.glowTransparency) or 0.35, 0, 1)
 				end
 			end)
 		end
@@ -2017,7 +2021,7 @@ function library:CreateWindow(options, ...)
 	local pepsiLibrary = Instance_new("ScreenGui")
 	library.MainScreenGui, MainScreenGui = pepsiLibrary, pepsiLibrary
 	local main = Instance_new("Frame")
-	local mainGlow = Instance_new("UIStroke")
+	local mainGlow = Instance_new("ImageLabel")
 	local mainBorder = Instance_new("Frame")
 	local tabSlider = Instance_new("Frame")
 	local innerMain = Instance_new("Frame")
@@ -2049,12 +2053,19 @@ function library:CreateWindow(options, ...)
 	main.Size = UDim2.fromOffset(500, 545)
 	mainGlow.Name = "mainGlow"
 	mainGlow.Parent = main
-	mainGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	mainGlow.Color = library.colors.glow
-	colored[1 + #colored] = {mainGlow, "Color", "glow"}
-	mainGlow.Enabled = (library.configuration.glowSize or 0) > 0
-	mainGlow.Thickness = math.max(tonumber(library.configuration.glowSize) or 0, 0)
-	mainGlow.Transparency = 0.35
+	mainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+	mainGlow.BackgroundTransparency = 1
+	mainGlow.BorderSizePixel = 0
+	mainGlow.Image = "rbxassetid://1316045217"
+	mainGlow.ImageColor3 = library.colors.glow
+	colored[1 + #colored] = {mainGlow, "ImageColor3", "glow"}
+	mainGlow.ImageTransparency = math.clamp(tonumber(library.configuration.glowTransparency) or 0.35, 0, 1)
+	mainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
+	mainGlow.ScaleType = Enum.ScaleType.Slice
+	mainGlow.Size = UDim2.new(1, (library.configuration.glowSize or 0) * 2, 1, (library.configuration.glowSize or 0) * 2)
+	mainGlow.SliceCenter = Rect.new(10, 10, 118, 118)
+	mainGlow.Visible = (library.configuration.glowSize or 0) > 0
+	mainGlow.ZIndex = 0
 	library.Glow = mainGlow
 	makeDraggable(main, main)
 	mainBorder.Name = "mainBorder"
@@ -7408,8 +7419,19 @@ function library:CreateWindow(options, ...)
 			LocationFlag = "glowSize",
 			Value = library.configuration.glowSize,
 			Min = 0,
-			Max = 8,
+			Max = 20,
 			Decimals = 1,
+			Textbox = true,
+			Callback = updatecolorsnotween
+		}}, {"AddSlider", "__Designer.Slider.GlowTransparency", settingssection, {
+			Name = "Glow Transparency",
+			Flag = "__Designer.Settings.GlowTransparency",
+			Location = library.configuration,
+			LocationFlag = "glowTransparency",
+			Value = library.configuration.glowTransparency,
+			Min = 0,
+			Max = 1,
+			Decimals = 2,
 			Textbox = true,
 			Callback = updatecolorsnotween
 		}}, {"AddLabel", "__Designer.Label.Version", settingssection, {
