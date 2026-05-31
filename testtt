@@ -4035,7 +4035,7 @@ function library:CreateWindow(options, ...)
 				local slider = Instance_new("ImageLabel")
 				local sliderInner = Instance_new("ImageLabel")
 				local sliderColored = Instance_new("ImageLabel")
-				local sliderHeadline = Instance_new("TextLabel")
+				local sliderHeadline = Instance_new((usetextbox and "TextBox") or "TextLabel")
 				local startingValue = presetValue or minValue
 				local sliderDragging = false
 				local activeSliderInput = nil
@@ -4054,7 +4054,7 @@ function library:CreateWindow(options, ...)
 				colored[1 + #colored] = {slider, "BorderColor3", "elementBorder"}
 				slider.Position = UDim2.fromScale(0.031, 0.48)
 				slider.Selectable = true
-				slider.Size = (usetextbox and UDim2.fromOffset(156, 18)) or UDim2.fromOffset(206, 18)
+				slider.Size = UDim2.fromOffset(206, 18)
 				slider.Image = "rbxassetid://2454009026"
 				slider.ImageColor3 = library.colors.bottomGradient
 				local colored_slider_ImageColor3 = {slider, "ImageColor3", "bottomGradient"}
@@ -4093,6 +4093,9 @@ function library:CreateWindow(options, ...)
 				sliderHeadline.Selectable = true
 				sliderHeadline.Size = UDim2.fromOffset(206, 20)
 				sliderHeadline.ZIndex = 5
+				if usetextbox then
+					sliderHeadline.ClearTextOnFocus = false
+				end
 				sliderHeadline.Font = Enum.Font.Code
 				sliderHeadline.LineHeight = 1.15
 				sliderHeadline.Text = resolvedisplay(startingValue)
@@ -4100,7 +4103,6 @@ function library:CreateWindow(options, ...)
 				colored[1 + #colored] = {sliderHeadline, "TextColor3", "elementText"}
 				sliderHeadline.TextSize = 14
 				sliderHeadline.TextXAlignment = Enum.TextXAlignment.Left
-				local realTextbox = nil
 				local function Set(t, newValue)
 					if nil == newValue and t ~= nil then
 						newValue = t
@@ -4119,9 +4121,6 @@ function library:CreateWindow(options, ...)
 							}):Play()
 						end
 						sliderHeadline.Text = resolvedisplay(newValue, last_val)
-						if usetextbox and realTextbox then
-							realTextbox.Text = tostring(newValue)
-						end
 						if callback and (last_val ~= newValue or options.AllowDuplicateCalls) then
 							task.spawn(callback, newValue, last_val)
 						end
@@ -4140,55 +4139,8 @@ function library:CreateWindow(options, ...)
 					if type(usetextbox) ~= "table" then
 						usetextbox = options
 					end
-					local textbox = Instance_new("ImageLabel")
-					local textboxInner = Instance_new("ImageLabel")
-					realTextbox = Instance_new("TextBox")
-					textbox.Name = "textbox"
-					textbox.Parent = newSlider
-					textbox.Active = true
-					textbox.BackgroundColor3 = library.colors.topGradient
-					local colored_textbox_BackgroundColor3 = {textbox, "BackgroundColor3", "topGradient"}
-					colored[1 + #colored] = colored_textbox_BackgroundColor3
-					textbox.BorderColor3 = library.colors.elementBorder
-					colored[1 + #colored] = {textbox, "BorderColor3", "elementBorder"}
-					textbox.Position = UDim2.new(1, -54, 0.48)
-					textbox.Selectable = true
-					textbox.Size = UDim2.fromOffset(43, 18)
-					textbox.Image = "rbxassetid://2454009026"
-					textbox.ImageColor3 = library.colors.bottomGradient
-					local colored_textbox_ImageColor3 = {textbox, "ImageColor3", "bottomGradient"}
-					colored[1 + #colored] = colored_textbox_ImageColor3
-					textboxInner.Name = "textboxInner"
-					textboxInner.Parent = textbox
-					textboxInner.Active = true
-					textboxInner.AnchorPoint = Vector2.new(0.5, 0.5)
-					textboxInner.BackgroundColor3 = library.colors.topGradient
-					colored[1 + #colored] = {textboxInner, "BackgroundColor3", "topGradient"}
-					textboxInner.BorderColor3 = library.colors.elementBorder
-					colored[1 + #colored] = {textboxInner, "BorderColor3", "elementBorder"}
-					textboxInner.Position = UDim2.fromScale(0.5, 0.5)
-					textboxInner.Selectable = true
-					textboxInner.Size = UDim2.new(1, -4, 1, -4)
-					textboxInner.Image = "rbxassetid://2454009026"
-					textboxInner.ImageColor3 = library.colors.bottomGradient
-					colored[1 + #colored] = {textboxInner, "ImageColor3", "bottomGradient"}
-					realTextbox.Name = "realTextbox"
-					realTextbox.Parent = textbox
-					realTextbox.BackgroundColor3 = Color3.new(1, 1, 1)
-					realTextbox.BackgroundTransparency = 1
-					realTextbox.Position = UDim2.new(0.0295485705)
-					realTextbox.Size = UDim2.fromScale(0.97, 1)
-					realTextbox.ZIndex = 5
-					realTextbox.ClearTextOnFocus = false
-					realTextbox.Font = Enum.Font.Code
-					realTextbox.LineHeight = 1.15
-					realTextbox.Text = tostring(startingValue)
-					realTextbox.TextColor3 = library.colors.otherElementText
-					colored[1 + #colored] = {realTextbox, "TextColor3", "otherElementText"}
-					realTextbox.TextSize = 14
-					realTextbox.PlaceholderText = tostring(startingValue)
-					library.signals[1 + #library.signals] = realTextbox.FocusLost:Connect(function()
-						local val = realTextbox.Text
+					library.signals[1 + #library.signals] = sliderHeadline.FocusLost:Connect(function()
+						local val = sliderHeadline.Text
 						if usetextbox.PreFormat then
 							local typ = type(usetextbox.PreFormat)
 							if typ == "function" then
@@ -4220,26 +4172,6 @@ function library:CreateWindow(options, ...)
 							end
 						end
 						Set((val and tonumber(val)) or presetValue or 0)
-					end)
-					library.signals[1 + #library.signals] = textbox.MouseEnter:Connect(function()
-						colored_textbox_BackgroundColor3[3] = "main"
-						colored_textbox_BackgroundColor3[4] = 1.5
-						colored_textbox_ImageColor3[3] = "main"
-						colored_textbox_ImageColor3[4] = 2.5
-						tweenService:Create(textbox, TweenInfo.new(0.35, library.configuration.easingStyle, library.configuration.easingDirection), {
-							BackgroundColor3 = darkenColor(library.colors.main, 1.5),
-							ImageColor3 = darkenColor(library.colors.main, 2.5)
-						}):Play()
-					end)
-					library.signals[1 + #library.signals] = textbox.MouseLeave:Connect(function()
-						colored_textbox_BackgroundColor3[3] = "topGradient"
-						colored_textbox_BackgroundColor3[4] = nil
-						colored_textbox_ImageColor3[3] = "bottomGradient"
-						colored_textbox_ImageColor3[4] = nil
-						tweenService:Create(textbox, TweenInfo.new(0.35, library.configuration.easingStyle, library.configuration.easingDirection), {
-							BackgroundColor3 = library.colors.topGradient,
-							ImageColor3 = library.colors.bottomGradient
-						}):Play()
 					end)
 				end
 				sectionFunctions:Update()
@@ -4279,9 +4211,6 @@ function library:CreateWindow(options, ...)
 						options.Location[options.LocationFlag or flagName] = sliderValue
 					end
 					sliderHeadline.Text = resolvedisplay(sliderValue, last_val)
-					if usetextbox and realTextbox then
-						realTextbox.Text = tostring(sliderValue)
-					end
 					if callback and last_val ~= sliderValue then
 						task.spawn(callback, sliderValue, last_val)
 					end
@@ -4291,7 +4220,7 @@ function library:CreateWindow(options, ...)
 					local inputType = input.UserInputType
 					return inputType == Enum.UserInputType.MouseButton1 or inputType == Enum.UserInputType.Touch
 				end
-				library.signals[1 + #library.signals] = newSlider.InputBegan:Connect(function(input)
+				library.signals[1 + #library.signals] = slider.InputBegan:Connect(function(input)
 					if not library.colorpicker and not isDraggingSomething and isSliderInput(input) then
 						sliderDragging = true
 						activeSliderInput = input
@@ -4299,7 +4228,7 @@ function library:CreateWindow(options, ...)
 						sliding(input, sliderInner, sliderColored)
 					end
 				end)
-				library.signals[1 + #library.signals] = newSlider.InputEnded:Connect(function(input)
+				library.signals[1 + #library.signals] = userInputService.InputEnded:Connect(function(input)
 					if not library.colorpicker and isSliderInput(input) and (input == activeSliderInput or input.UserInputType == Enum.UserInputType.MouseButton1) then
 						sliderDragging = false
 						activeSliderInput = nil
@@ -4325,9 +4254,6 @@ function library:CreateWindow(options, ...)
 						}):Play()
 					end
 					sliderHeadline.Text = resolvedisplay(newValue, last_val)
-					if usetextbox and realTextbox then
-						realTextbox.Text = tostring(newValue)
-					end
 					return newValue
 				end
 				local objectdata = {
