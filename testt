@@ -4021,7 +4021,16 @@ function library:CreateWindow(options, ...)
 					end
 					return (sliderName or "???") .. ": " .. str
 				end
-				local usetextbox = options.Textbox or options.InputBox or options.CustomInput
+				local usetextbox = options.Textbox
+				if usetextbox == nil then
+					usetextbox = options.InputBox
+				end
+				if usetextbox == nil then
+					usetextbox = options.CustomInput
+				end
+				if usetextbox == nil then
+					usetextbox = true
+				end
 				local newSlider = Instance_new("Frame")
 				local slider = Instance_new("ImageLabel")
 				local sliderInner = Instance_new("ImageLabel")
@@ -4029,6 +4038,7 @@ function library:CreateWindow(options, ...)
 				local sliderHeadline = Instance_new("TextLabel")
 				local startingValue = presetValue or minValue
 				local sliderDragging = false
+				local activeSliderInput = nil
 				newSlider.Name = "newSlider"
 				newSlider.Parent = sectionHolder
 				newSlider.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -4172,11 +4182,11 @@ function library:CreateWindow(options, ...)
 					realTextbox.ClearTextOnFocus = false
 					realTextbox.Font = Enum.Font.Code
 					realTextbox.LineHeight = 1.15
-					realTextbox.Text = tostring(presetValue)
+					realTextbox.Text = tostring(startingValue)
 					realTextbox.TextColor3 = library.colors.otherElementText
 					colored[1 + #colored] = {realTextbox, "TextColor3", "otherElementText"}
 					realTextbox.TextSize = 14
-					realTextbox.PlaceholderText = (presetValue ~= nil and tostring(presetValue)) or ""
+					realTextbox.PlaceholderText = tostring(startingValue)
 					library.signals[1 + #library.signals] = realTextbox.FocusLost:Connect(function()
 						local val = realTextbox.Text
 						if usetextbox.PreFormat then
@@ -4277,26 +4287,27 @@ function library:CreateWindow(options, ...)
 					end
 					last_val = sliderValue
 				end
+				local function isSliderInput(input)
+					local inputType = input.UserInputType
+					return inputType == Enum.UserInputType.MouseButton1 or inputType == Enum.UserInputType.Touch
+				end
 				library.signals[1 + #library.signals] = newSlider.InputBegan:Connect(function(input)
-					if not library.colorpicker and input.UserInputType == Enum.UserInputType.MouseButton1 then
+					if not library.colorpicker and not isDraggingSomething and isSliderInput(input) then
 						sliderDragging = true
-						isDraggingSomething = true
-					end
-				end)
-				library.signals[1 + #library.signals] = newSlider.InputEnded:Connect(function(input)
-					if not library.colorpicker and input.UserInputType == Enum.UserInputType.MouseButton1 then
-						sliderDragging = false
-						isDraggingSomething = false
-					end
-				end)
-				library.signals[1 + #library.signals] = newSlider.InputBegan:Connect(function(input)
-					if not library.colorpicker and not isDraggingSomething and input.UserInputType == Enum.UserInputType.MouseButton1 then
+						activeSliderInput = input
 						isDraggingSomething = true
 						sliding(input, sliderInner, sliderColored)
 					end
 				end)
+				library.signals[1 + #library.signals] = newSlider.InputEnded:Connect(function(input)
+					if not library.colorpicker and isSliderInput(input) and (input == activeSliderInput or input.UserInputType == Enum.UserInputType.MouseButton1) then
+						sliderDragging = false
+						activeSliderInput = nil
+						isDraggingSomething = false
+					end
+				end)
 				library.signals[1 + #library.signals] = userInputService.InputChanged:Connect(function(input)
-					if not library.colorpicker and sliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+					if not library.colorpicker and sliderDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input == activeSliderInput) then
 						sliding(input, sliderInner, sliderColored)
 					end
 				end)
