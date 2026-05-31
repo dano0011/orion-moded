@@ -473,11 +473,13 @@ local library = {
 	configuration = {
 		hideKeybind = Enum.KeyCode.RightShift,
 		smoothDragging = false,
+		glowSize = 2,
 		easingStyle = Enum.EasingStyle.Quart,
 		easingDirection = Enum.EasingDirection.Out
 	},
 	colors = {
 		main = Color3.fromRGB(255, 39, 39),
+		glow = Color3.fromRGB(255, 39, 39),
 		background = Color3.fromRGB(40, 40, 40),
 		outerBorder = Color3.fromRGB(15, 15, 15),
 		innerBorder = Color3.fromRGB(73, 63, 73),
@@ -795,6 +797,10 @@ do
 					library.Backdrop.Image = resolveid(library_flags["__Designer.Background.ImageAssetID"], "__Designer.Background.ImageAssetID") or ""
 					library.Backdrop.ImageColor3 = library_flags["__Designer.Background.ImageColor"] or Color3.new(1, 1, 1)
 					library.Backdrop.ImageTransparency = (library_flags["__Designer.Background.ImageTransparency"] or 95) / 100
+				end
+				if library.Glow then
+					library.Glow.Thickness = math.max(tonumber(library.configuration.glowSize) or 0, 0)
+					library.Glow.Enabled = library.Glow.Thickness > 0
 				end
 			end)
 		end
@@ -2011,6 +2017,7 @@ function library:CreateWindow(options, ...)
 	local pepsiLibrary = Instance_new("ScreenGui")
 	library.MainScreenGui, MainScreenGui = pepsiLibrary, pepsiLibrary
 	local main = Instance_new("Frame")
+	local mainGlow = Instance_new("UIStroke")
 	local mainBorder = Instance_new("Frame")
 	local tabSlider = Instance_new("Frame")
 	local innerMain = Instance_new("Frame")
@@ -2040,6 +2047,15 @@ function library:CreateWindow(options, ...)
 	colored[1 + #colored] = {main, "BorderColor3", "outerBorder"}
 	main.Position = UDim2.fromScale(0.5, 0.5)
 	main.Size = UDim2.fromOffset(500, 545)
+	mainGlow.Name = "mainGlow"
+	mainGlow.Parent = main
+	mainGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	mainGlow.Color = library.colors.glow
+	colored[1 + #colored] = {mainGlow, "Color", "glow"}
+	mainGlow.Enabled = (library.configuration.glowSize or 0) > 0
+	mainGlow.Thickness = math.max(tonumber(library.configuration.glowSize) or 0, 0)
+	mainGlow.Transparency = 0.35
+	library.Glow = mainGlow
 	makeDraggable(main, main)
 	mainBorder.Name = "mainBorder"
 	mainBorder.Parent = main
@@ -7292,7 +7308,7 @@ function library:CreateWindow(options, ...)
 		})
 		local designerelements = {}
 		library.designerelements = designerelements
-		for _, v in next, {{"Main", "main"}, {"Background", "background"}, {"Outer Border", "outerBorder"}, {"Inner Border", "innerBorder"}, {"Top Gradient", "topGradient"}, {"Bottom Gradient", "bottomGradient"}, {"Section Background", "sectionBackground"}, {"Section", "section"}, {"Element Text", "elementText"}, {"Other Element Text", "otherElementText"}, {"Tab Text", "tabText"}, {"Element Border", "elementBorder"}, {"Selected Option", "selectedOption"}, {"Unselected Option", "unselectedOption"}, {"Hovered Option Top", "hoveredOptionTop"}, {"Unhovered Option Top", "unhoveredOptionTop"}, {"Hovered Option Bottom", "hoveredOptionBottom"}, {"Unhovered Option Bottom", "unhoveredOptionBottom"}} do
+		for _, v in next, {{"Main", "main"}, {"Glow", "glow"}, {"Background", "background"}, {"Outer Border", "outerBorder"}, {"Inner Border", "innerBorder"}, {"Top Gradient", "topGradient"}, {"Bottom Gradient", "bottomGradient"}, {"Section Background", "sectionBackground"}, {"Section", "section"}, {"Element Text", "elementText"}, {"Other Element Text", "otherElementText"}, {"Tab Text", "tabText"}, {"Element Border", "elementBorder"}, {"Selected Option", "selectedOption"}, {"Unselected Option", "unselectedOption"}, {"Hovered Option Top", "hoveredOptionTop"}, {"Unhovered Option Top", "unhoveredOptionTop"}, {"Hovered Option Bottom", "hoveredOptionBottom"}, {"Unhovered Option Bottom", "unhoveredOptionBottom"}} do
 			local nam, codename = v[1], v[2]
 			local cflag = "__Designer.Colors." .. codename
 			designerelements[codename] = {
@@ -7385,6 +7401,17 @@ function library:CreateWindow(options, ...)
 			Callback = function()
 				lasthidebing = os.clock()
 			end
+		}}, {"AddSlider", "__Designer.Slider.GlowSize", settingssection, {
+			Name = "Glow Size",
+			Flag = "__Designer.Settings.GlowSize",
+			Location = library.configuration,
+			LocationFlag = "glowSize",
+			Value = library.configuration.glowSize,
+			Min = 0,
+			Max = 8,
+			Decimals = 1,
+			Textbox = true,
+			Callback = updatecolorsnotween
 		}}, {"AddLabel", "__Designer.Label.Version", settingssection, {
 			Name = "Library Version: " .. tostring(library.Version or "?")
 		}}}
