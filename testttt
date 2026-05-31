@@ -815,6 +815,9 @@ library.colors = setmetatable({}, {
 	end
 })
 local elements = library.elements
+if shared.libraries and shared.unloadall then
+	pcall(shared.unloadall)
+end
 shared.libraries = shared.libraries or {}
 local colorpickerconflicts = library.colorpickerconflicts
 local keyHandler = {
