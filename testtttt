@@ -4034,11 +4034,15 @@ function library:CreateWindow(options, ...)
 				if usetextbox == nil then
 					usetextbox = true
 				end
+				if usetextbox and type(usetextbox) ~= "table" then
+					usetextbox = options
+				end
 				local newSlider = Instance_new("Frame")
 				local slider = Instance_new("ImageLabel")
 				local sliderInner = Instance_new("ImageLabel")
 				local sliderColored = Instance_new("ImageLabel")
-				local sliderHeadline = Instance_new((usetextbox and "TextBox") or "TextLabel")
+				local sliderHeadline = Instance_new("TextLabel")
+				local sliderValue = nil
 				local startingValue = presetValue or minValue
 				local sliderDragging = false
 				local activeSliderInput = nil
@@ -4094,18 +4098,44 @@ function library:CreateWindow(options, ...)
 				sliderHeadline.BackgroundTransparency = 1
 				sliderHeadline.Position = UDim2.new(0.031)
 				sliderHeadline.Selectable = true
-				sliderHeadline.Size = UDim2.fromOffset(206, 20)
+				sliderHeadline.Size = usetextbox and UDim2.fromOffset(145, 20) or UDim2.fromOffset(206, 20)
 				sliderHeadline.ZIndex = 5
-				if usetextbox then
-					sliderHeadline.ClearTextOnFocus = false
-				end
 				sliderHeadline.Font = Enum.Font.Code
 				sliderHeadline.LineHeight = 1.15
-				sliderHeadline.Text = resolvedisplay(startingValue)
+				sliderHeadline.Text = usetextbox and ((sliderName or "???") .. ":") or resolvedisplay(startingValue)
 				sliderHeadline.TextColor3 = library.colors.elementText
 				colored[1 + #colored] = {sliderHeadline, "TextColor3", "elementText"}
 				sliderHeadline.TextSize = 14
 				sliderHeadline.TextXAlignment = Enum.TextXAlignment.Left
+				if usetextbox then
+					sliderValue = Instance_new("TextBox")
+					sliderValue.Name = "sliderValue"
+					sliderValue.Parent = newSlider
+					sliderValue.Active = true
+					sliderValue.AnchorPoint = Vector2.new(1, 0)
+					sliderValue.BackgroundColor3 = Color3.new(1, 1, 1)
+					sliderValue.BackgroundTransparency = 1
+					sliderValue.Position = UDim2.new(0.031, 206, 0, 0)
+					sliderValue.Selectable = true
+					sliderValue.Size = UDim2.fromOffset(60, 20)
+					sliderValue.ZIndex = 5
+					sliderValue.ClearTextOnFocus = false
+					sliderValue.Font = Enum.Font.Code
+					sliderValue.LineHeight = 1.15
+					sliderValue.Text = tostring(startingValue)
+					sliderValue.TextColor3 = library.colors.elementText
+					colored[1 + #colored] = {sliderValue, "TextColor3", "elementText"}
+					sliderValue.TextSize = 14
+					sliderValue.TextXAlignment = Enum.TextXAlignment.Right
+				end
+				local function updateSliderDisplay(value, last_val)
+					if sliderValue then
+						sliderHeadline.Text = (sliderName or "???") .. ":"
+						sliderValue.Text = tostring(value)
+					else
+						sliderHeadline.Text = resolvedisplay(value, last_val)
+					end
+				end
 				local function Set(t, newValue)
 					if nil == newValue and t ~= nil then
 						newValue = t
@@ -4123,7 +4153,7 @@ function library:CreateWindow(options, ...)
 								Size = UDim2.fromScale(((newValue or minValue) - minValue) / (maxValue - minValue), 1)
 							}):Play()
 						end
-						sliderHeadline.Text = resolvedisplay(newValue, last_val)
+						updateSliderDisplay(newValue, last_val)
 						if callback and (last_val ~= newValue or options.AllowDuplicateCalls) then
 							task.spawn(callback, newValue, last_val)
 						end
@@ -4139,11 +4169,8 @@ function library:CreateWindow(options, ...)
 					end
 				end
 				if usetextbox then
-					if type(usetextbox) ~= "table" then
-						usetextbox = options
-					end
-					library.signals[1 + #library.signals] = sliderHeadline.FocusLost:Connect(function()
-						local val = sliderHeadline.Text
+					library.signals[1 + #library.signals] = sliderValue.FocusLost:Connect(function()
+						local val = sliderValue.Text
 						if usetextbox.PreFormat then
 							local typ = type(usetextbox.PreFormat)
 							if typ == "function" then
@@ -4213,7 +4240,7 @@ function library:CreateWindow(options, ...)
 					if options.Location then
 						options.Location[options.LocationFlag or flagName] = sliderValue
 					end
-					sliderHeadline.Text = resolvedisplay(sliderValue, last_val)
+					updateSliderDisplay(sliderValue, last_val)
 					if callback and last_val ~= sliderValue then
 						task.spawn(callback, sliderValue, last_val)
 					end
@@ -4256,7 +4283,7 @@ function library:CreateWindow(options, ...)
 							Size = UDim2.fromScale(((newValue or minValue) - minValue) / (maxValue - minValue), 1)
 						}):Play()
 					end
-					sliderHeadline.Text = resolvedisplay(newValue, last_val)
+					updateSliderDisplay(newValue, last_val)
 					return newValue
 				end
 				local objectdata = {
