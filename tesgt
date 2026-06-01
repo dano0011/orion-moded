@@ -4070,6 +4070,18 @@ function library:CreateWindow(options, ...)
 				local sliderColored = Instance_new("ImageLabel")
 				local sliderHeadline = Instance_new("TextLabel")
 				local sliderValue = nil
+				local function fixshit(val, was)
+					local display = resolvedisplay(val, was)
+					for _, candidate in next, {decimalprecision and string.format("%0." .. decimalprecision .. "f", val) or nil, tostring(val), tostring(floor(val))} do
+						if candidate then
+							local startPos = display:find(candidate, 1, true)
+							if startPos and startPos + #candidate - 1 == #display then
+								return display:sub(1, startPos - 1), candidate
+							end
+						end
+					end
+					return (sliderName or "???") .. ":", tostring(val)
+				end
 				local startingValue = presetValue or minValue
 				local sliderDragging = false
 				local activeSliderInput = nil
@@ -4129,7 +4141,7 @@ function library:CreateWindow(options, ...)
 				sliderHeadline.ZIndex = 5
 				sliderHeadline.Font = Enum.Font.Code
 				sliderHeadline.LineHeight = 1.15
-				sliderHeadline.Text = usetextbox and ((sliderName or "???") .. ":") or resolvedisplay(startingValue)
+				sliderHeadline.Text = usetextbox and fixshit(startingValue) or resolvedisplay(startingValue)
 				sliderHeadline.TextColor3 = library.colors.elementText
 				colored[1 + #colored] = {sliderHeadline, "TextColor3", "elementText"}
 				sliderHeadline.TextSize = 14
@@ -4149,7 +4161,7 @@ function library:CreateWindow(options, ...)
 					sliderValue.ClearTextOnFocus = false
 					sliderValue.Font = Enum.Font.Code
 					sliderValue.LineHeight = 1.15
-					sliderValue.Text = tostring(startingValue)
+					sliderValue.Text = select(2, fixshit(startingValue))
 					sliderValue.TextColor3 = library.colors.elementText
 					colored[1 + #colored] = {sliderValue, "TextColor3", "elementText"}
 					sliderValue.TextSize = 14
@@ -4157,8 +4169,7 @@ function library:CreateWindow(options, ...)
 				end
 				local function updateSliderDisplay(value, last_val)
 					if sliderValue then
-						sliderHeadline.Text = (sliderName or "???") .. ":"
-						sliderValue.Text = tostring(value)
+						sliderHeadline.Text, sliderValue.Text = fixshit(value, last_val)
 					else
 						sliderHeadline.Text = resolvedisplay(value, last_val)
 					end
