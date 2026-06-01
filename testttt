@@ -1661,6 +1661,7 @@ local function createSettings(window)
 	do
 		local selectedConfig = CFileName or ""
 		local pendingName = ""
+		local autoSaveMetaFile = ConfigurationFolder .. "/_autosave.txt"
 
 		local function getConfigs()
 			local configs = {}
@@ -1673,6 +1674,19 @@ local function createSettings(window)
 				end
 			end
 			return configs
+		end
+
+		local function syncAutoSaveFile()
+			if not autoSaveConfig then
+				if callSafely(isfile, autoSaveMetaFile) then
+					callSafely(delfile, autoSaveMetaFile)
+				end
+				return
+			end
+			if CFileName and CFileName ~= '' then
+				ensureFolder(ConfigurationFolder)
+				callSafely(writefile, autoSaveMetaFile, CFileName)
+			end
 		end
 
 		newTab:CreateSection('Configurations')
@@ -1701,19 +1715,19 @@ local function createSettings(window)
 
 		newTab:CreateSection('Actions')
 
-		local autoSaveMetaFile = ConfigurationFolder .. "/_autosave.txt"
 		newTab:CreateToggle({
 			Name = 'Auto Save Config',
 			CurrentValue = callSafely(isfile, autoSaveMetaFile) and true or false,
 			Ext = true,
 			Callback = function(value)
 				autoSaveConfig = value
-				ensureFolder(ConfigurationFolder)
 				if value then
-					callSafely(writefile, autoSaveMetaFile, "1")
+					syncAutoSaveFile()
 					SaveConfiguration(true)
+					RayfieldLibrary:Notify({Title = 'Auto Save', Content = 'Auto save enabled.', Duration = 2})
 				else
-					callSafely(delfile, autoSaveMetaFile)
+					syncAutoSaveFile()
+					RayfieldLibrary:Notify({Title = 'Auto Save', Content = 'Auto save disabled.', Duration = 2})
 				end
 			end,
 		})
@@ -1725,6 +1739,8 @@ local function createSettings(window)
 				if name ~= '' then
 					ensureFolder(ConfigurationFolder)
 					CFileName = name
+					selectedConfig = name
+					syncAutoSaveFile()
 					SaveConfiguration(true)
 					RayfieldLibrary:Notify({Title = 'Config Saved', Content = "Saved as '" .. name .. "'", Duration = 3})
 					ConfigDropdown:Refresh(getConfigs())
@@ -1738,6 +1754,8 @@ local function createSettings(window)
 				if selectedConfig ~= '' then
 					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
 					if callSafely(isfile, path) then
+						CFileName = selectedConfig
+						syncAutoSaveFile()
 						LoadConfiguration(callSafely(readfile, path))
 						RayfieldLibrary:Notify({Title = 'Config Loaded', Content = "Loaded '" .. selectedConfig .. "'", Duration = 3})
 					else
@@ -1904,7 +1922,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end
 
 	pcall(function()
-		if not Settings.ConfigurationSaving.FileName then
+		if not Settings.ConfigurationSaving.FileName or Settings.ConfigurationSaving.FileName == '' then
 			Settings.ConfigurationSaving.FileName = tostring(game.PlaceId)
 		end
 
@@ -3934,12 +3952,18 @@ end
 
 function RayfieldLibrary:LoadConfiguration()
 	local config
+	local autoLoaded = false
 
 	if debugX then
 		warn('Loading Configuration')
 	end
 
 	if callSafely(isfile, ConfigurationFolder .. "/_autosave.txt") then
+		local savedConfig = callSafely(readfile, ConfigurationFolder .. "/_autosave.txt")
+		if savedConfig and savedConfig ~= '' then
+			CFileName = savedConfig
+			autoLoaded = true
+		end
 		autoSaveConfig = true
 	end
 
@@ -3968,7 +3992,11 @@ function RayfieldLibrary:LoadConfiguration()
 		end)
 
 		if success and loaded and not notified then
-			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
+			if autoLoaded then
+				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "Auto loaded '" .. CFileName .. "'.", Image = 4384403532})
+			else
+				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
+			end
 		elseif not success and not notified then
 			warn('Rayfield Configurations Error | '..tostring(result))
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
