@@ -903,7 +903,6 @@ local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('htt
 
 local CFileName = nil
 local CEnabled = false
-local autoSaveConfig = false
 local Minimised = false
 local Hidden = false
 local Debounce = false
@@ -1142,9 +1141,8 @@ local function LoadConfiguration(Configuration)
 	return changed
 end
 
-local function SaveConfiguration(manual)
+local function SaveConfiguration()
 	if not CEnabled or not globalLoaded then return end
-	if not manual and not autoSaveConfig then return end
 
 	if debugX then
 		print('Saving')
@@ -1602,14 +1600,18 @@ local function createSettings(window)
 		return
 	end
 
-	local newTab = window:CreateTab('Rayfield Settings', 0, true)
-
-	if TabList['Rayfield Settings'] then
-		TabList['Rayfield Settings'].LayoutOrder = 1000
+	if Topbar:FindFirstChild('Settings') then
+		Topbar.Settings.Visible = false
 	end
 
-	if Elements['Rayfield Settings'] then
-		Elements['Rayfield Settings'].LayoutOrder = 1000
+	local newTab = window:CreateTab('Settings', 10723344270, true)
+
+	if TabList['Settings'] then
+		TabList['Settings'].LayoutOrder = 1000
+	end
+
+	if Elements['Settings'] then
+		Elements['Settings'].LayoutOrder = 1000
 	end
 
 	-- Create sections and elements
@@ -1659,7 +1661,6 @@ local function createSettings(window)
 	do
 		local selectedConfig = CFileName or ""
 		local pendingName = ""
-		local autoSaveMetaFile = ConfigurationFolder .. "/_autosave.txt"
 
 		local function getConfigs()
 			local configs = {}
@@ -1672,19 +1673,6 @@ local function createSettings(window)
 				end
 			end
 			return configs
-		end
-
-		local function syncAutoSaveFile()
-			if not autoSaveConfig then
-				if callSafely(isfile, autoSaveMetaFile) then
-					callSafely(delfile, autoSaveMetaFile)
-				end
-				return
-			end
-			if CFileName and CFileName ~= '' then
-				ensureFolder(ConfigurationFolder)
-				callSafely(writefile, autoSaveMetaFile, CFileName)
-			end
 		end
 
 		newTab:CreateSection('Configurations')
@@ -1713,23 +1701,6 @@ local function createSettings(window)
 
 		newTab:CreateSection('Actions')
 
-		newTab:CreateToggle({
-			Name = 'Auto Save Config',
-			CurrentValue = callSafely(isfile, autoSaveMetaFile) and true or false,
-			Ext = true,
-			Callback = function(value)
-				autoSaveConfig = value
-				if value then
-					syncAutoSaveFile()
-					SaveConfiguration(true)
-					RayfieldLibrary:Notify({Title = 'Auto Save', Content = 'Auto save enabled.', Duration = 2})
-				else
-					syncAutoSaveFile()
-					RayfieldLibrary:Notify({Title = 'Auto Save', Content = 'Auto save disabled.', Duration = 2})
-				end
-			end,
-		})
-
 		newTab:CreateButton({
 			Name = 'Save Config',
 			Callback = function()
@@ -1738,8 +1709,7 @@ local function createSettings(window)
 					ensureFolder(ConfigurationFolder)
 					CFileName = name
 					selectedConfig = name
-					syncAutoSaveFile()
-					SaveConfiguration(true)
+					SaveConfiguration()
 					RayfieldLibrary:Notify({Title = 'Config Saved', Content = "Saved as '" .. name .. "'", Duration = 3})
 					ConfigDropdown:Refresh(getConfigs())
 				end
@@ -1753,7 +1723,6 @@ local function createSettings(window)
 					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
 					if callSafely(isfile, path) then
 						CFileName = selectedConfig
-						syncAutoSaveFile()
 						LoadConfiguration(callSafely(readfile, path))
 						RayfieldLibrary:Notify({Title = 'Config Loaded', Content = "Loaded '" .. selectedConfig .. "'", Duration = 3})
 					else
@@ -3886,28 +3855,6 @@ Topbar.Search.MouseButton1Click:Connect(function()
 	end)
 end)
 
-if Topbar:FindFirstChild('Settings') then
-	Topbar.Settings.MouseButton1Click:Connect(function()
-		task.spawn(function()
-			for _, OtherTabButton in ipairs(TabList:GetChildren()) do
-				if OtherTabButton.Name ~= "Template" and OtherTabButton.ClassName == "Frame" and OtherTabButton.Name ~= "Placeholder" then
-					TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.TabBackground}):Play()
-					TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextColor3 = SelectedTheme.TabTextColor}):Play()
-					TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageColor3 = SelectedTheme.TabTextColor}):Play()
-					TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
-					TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.2}):Play()
-					TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
-					TweenService:Create(OtherTabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
-				end
-			end
-
-			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
-		end)
-	end)
-
-end
-
-
 Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden, not useMobileSizing)
 end)
@@ -3950,19 +3897,9 @@ end
 
 function RayfieldLibrary:LoadConfiguration()
 	local config
-	local autoLoaded = false
 
 	if debugX then
 		warn('Loading Configuration')
-	end
-
-	if callSafely(isfile, ConfigurationFolder .. "/_autosave.txt") then
-		local savedConfig = callSafely(readfile, ConfigurationFolder .. "/_autosave.txt")
-		if savedConfig and savedConfig ~= '' then
-			CFileName = savedConfig
-			autoLoaded = true
-		end
-		autoSaveConfig = true
 	end
 
 	if useStudio then
@@ -3990,11 +3927,7 @@ function RayfieldLibrary:LoadConfiguration()
 		end)
 
 		if success and loaded and not notified then
-			if autoLoaded then
-				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "Auto loaded '" .. CFileName .. "'.", Image = 4384403532})
-			else
-				RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
-			end
+			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "The configuration file for this script has been loaded from a previous session.", Image = 4384403532})
 		elseif not success and not notified then
 			warn('Rayfield Configurations Error | '..tostring(result))
 			RayfieldLibrary:Notify({Title = "Rayfield Configurations", Content = "We've encountered an issue loading your configuration correctly.\n\nCheck the Developer Console for more information.", Image = 4384402990})
