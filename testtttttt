@@ -1600,18 +1600,14 @@ local function createSettings(window)
 		return
 	end
 
-	if Topbar:FindFirstChild('Settings') then
-		Topbar.Settings.Visible = false
+	local newTab = window:CreateTab('Rayfield Settings', 0, true)
+
+	if TabList['Rayfield Settings'] then
+		TabList['Rayfield Settings'].LayoutOrder = 1000
 	end
 
-	local newTab = window:CreateTab('Settings', 10723344270, true)
-
-	if TabList['Settings'] then
-		TabList['Settings'].LayoutOrder = 1000
-	end
-
-	if Elements['Settings'] then
-		Elements['Settings'].LayoutOrder = 1000
+	if Elements['Rayfield Settings'] then
+		Elements['Rayfield Settings'].LayoutOrder = 1000
 	end
 
 	-- Create sections and elements
@@ -1658,6 +1654,17 @@ local function createSettings(window)
 	loadSettings()
 	saveSettings()
 
+	local configTab = window:CreateTab('Settings', 10723344270, true)
+
+	if TabList['Settings'] then
+		TabList['Settings'].Visible = true
+		TabList['Settings'].LayoutOrder = 1001
+	end
+
+	if Elements['Settings'] then
+		Elements['Settings'].LayoutOrder = 1001
+	end
+
 	do
 		local selectedConfig = CFileName or ""
 		local pendingName = ""
@@ -1675,9 +1682,9 @@ local function createSettings(window)
 			return configs
 		end
 
-		newTab:CreateSection('Configurations')
+		configTab:CreateSection('Configurations')
 
-		local ConfigDropdown = newTab:CreateDropdown({
+		local ConfigDropdown = configTab:CreateDropdown({
 			Name = 'Select Config',
 			Options = getConfigs(),
 			CurrentOption = {CFileName},
@@ -1688,7 +1695,7 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateInput({
+		configTab:CreateInput({
 			Name = 'New Config Name',
 			CurrentValue = '',
 			PlaceholderText = 'Enter name...',
@@ -1699,9 +1706,9 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateSection('Actions')
+		configTab:CreateSection('Actions')
 
-		newTab:CreateButton({
+		configTab:CreateButton({
 			Name = 'Save Config',
 			Callback = function()
 				local name = pendingName ~= '' and pendingName or selectedConfig
@@ -1716,7 +1723,7 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateButton({
+		configTab:CreateButton({
 			Name = 'Load Config',
 			Callback = function()
 				if selectedConfig ~= '' then
@@ -1732,7 +1739,7 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateButton({
+		configTab:CreateButton({
 			Name = 'Refresh List',
 			Callback = function()
 				ConfigDropdown:Refresh(getConfigs())
@@ -1740,7 +1747,7 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateButton({
+		configTab:CreateButton({
 			Name = 'Delete Config',
 			Callback = function()
 				if selectedConfig ~= '' then
@@ -3854,6 +3861,26 @@ Topbar.Search.MouseButton1Click:Connect(function()
 		end
 	end)
 end)
+
+if Topbar:FindFirstChild('Settings') then
+	Topbar.Settings.MouseButton1Click:Connect(function()
+		task.spawn(function()
+			for _, OtherTabButton in ipairs(TabList:GetChildren()) do
+				if OtherTabButton.Name ~= "Template" and OtherTabButton.ClassName == "Frame" and OtherTabButton.Name ~= "Placeholder" then
+					TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.TabBackground}):Play()
+					TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextColor3 = SelectedTheme.TabTextColor}):Play()
+					TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageColor3 = SelectedTheme.TabTextColor}):Play()
+					TweenService:Create(OtherTabButton, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.7}):Play()
+					TweenService:Create(OtherTabButton.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0.2}):Play()
+					TweenService:Create(OtherTabButton.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
+					TweenService:Create(OtherTabButton.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 0.5}):Play()
+				end
+			end
+
+			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
+		end)
+	end)
+end
 
 Topbar.Hide.MouseButton1Click:Connect(function()
 	setVisibility(Hidden, not useMobileSizing)
