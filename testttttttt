@@ -1740,14 +1740,6 @@ local function createSettings(window)
 		})
 
 		configTab:CreateButton({
-			Name = 'Refresh List',
-			Callback = function()
-				ConfigDropdown:Refresh(getConfigs())
-				RayfieldLibrary:Notify({Title = 'Refreshed', Content = 'Config list updated.', Duration = 2})
-			end,
-		})
-
-		configTab:CreateButton({
 			Name = 'Delete Config',
 			Callback = function()
 				if selectedConfig ~= '' then
