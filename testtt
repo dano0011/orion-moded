@@ -1701,13 +1701,20 @@ local function createSettings(window)
 
 		newTab:CreateSection('Actions')
 
+		local autoSaveMetaFile = ConfigurationFolder .. "/_autosave.txt"
 		newTab:CreateToggle({
 			Name = 'Auto Save Config',
-			CurrentValue = false,
+			CurrentValue = callSafely(isfile, autoSaveMetaFile) and true or false,
 			Ext = true,
 			Callback = function(value)
 				autoSaveConfig = value
-				RayfieldLibrary:Notify({Title = 'Auto Save', Content = value and 'Auto save enabled.' or 'Auto save disabled.', Duration = 2})
+				ensureFolder(ConfigurationFolder)
+				if value then
+					callSafely(writefile, autoSaveMetaFile, "1")
+					SaveConfiguration(true)
+				else
+					callSafely(delfile, autoSaveMetaFile)
+				end
 			end,
 		})
 
@@ -3319,6 +3326,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 		-- Toggle
 		function Tab:CreateToggle(ToggleSettings)
 			local ToggleValue = {}
+			ToggleSettings.Flag = ToggleSettings.Flag or ToggleSettings.Name
 
 			local Toggle = Elements.Template.Toggle:Clone()
 			Toggle.Name = ToggleSettings.Name
@@ -3929,6 +3937,10 @@ function RayfieldLibrary:LoadConfiguration()
 
 	if debugX then
 		warn('Loading Configuration')
+	end
+
+	if callSafely(isfile, ConfigurationFolder .. "/_autosave.txt") then
+		autoSaveConfig = true
 	end
 
 	if useStudio then
