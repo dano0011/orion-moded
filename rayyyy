@@ -1655,6 +1655,110 @@ local function createSettings(window)
 	settingsCreated = true
 	loadSettings()
 	saveSettings()
+
+	if CEnabled then
+		local selectedConfig = CFileName
+
+		local function getConfigs()
+			local configs = {}
+			if callSafely(isfolder, ConfigurationFolder) then
+				for _, file in ipairs(callSafely(listfiles, ConfigurationFolder) or {}) do
+					local name = file:match("([^/\\]+)$")
+					if name and name:sub(-#ConfigurationExtension) == ConfigurationExtension then
+						table.insert(configs, name:sub(1, -#ConfigurationExtension - 1))
+					end
+				end
+			end
+			return configs
+		end
+
+		newTab:CreateSection('Configurations')
+
+		local ConfigDropdown = newTab:CreateDropdown({
+			Name = 'Select Config',
+			Options = getConfigs(),
+			CurrentOption = {CFileName},
+			MultipleOptions = false,
+			Ext = true,
+			Callback = function(option)
+				selectedConfig = type(option) == 'table' and option[1] or option
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Save Config',
+			Callback = function()
+				if selectedConfig and selectedConfig ~= '' then
+					CFileName = selectedConfig
+					SaveConfiguration()
+					RayfieldLibrary:Notify({Title = 'Config Saved', Content = "Saved as '" .. selectedConfig .. "'", Duration = 3})
+				end
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Load Config',
+			Callback = function()
+				if selectedConfig and selectedConfig ~= '' then
+					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
+					if callSafely(isfile, path) then
+						local changed = LoadConfiguration(callSafely(readfile, path))
+						if changed then
+							RayfieldLibrary:Notify({Title = 'Config Loaded', Content = "Loaded '" .. selectedConfig .. "'", Duration = 3})
+						end
+					else
+						RayfieldLibrary:Notify({Title = 'Not Found', Content = "Config '" .. selectedConfig .. "' does not exist.", Duration = 3})
+					end
+				end
+			end,
+		})
+
+		newTab:CreateInput({
+			Name = 'New Config Name',
+			CurrentValue = '',
+			PlaceholderText = 'Enter name...',
+			RemoveTextAfterFocusLost = false,
+			Ext = true,
+			Callback = function(text)
+				if text and text ~= '' then
+					ensureFolder(ConfigurationFolder)
+					local path = ConfigurationFolder .. '/' .. text .. ConfigurationExtension
+					if not callSafely(isfile, path) then
+						callSafely(writefile, path, '{}')
+						RayfieldLibrary:Notify({Title = 'Config Created', Content = "Created '" .. text .. "'", Duration = 3})
+						ConfigDropdown:Refresh(getConfigs())
+					else
+						RayfieldLibrary:Notify({Title = 'Already Exists', Content = "A config named '" .. text .. "' already exists.", Duration = 3})
+					end
+				end
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Refresh List',
+			Callback = function()
+				ConfigDropdown:Refresh(getConfigs())
+				RayfieldLibrary:Notify({Title = 'Refreshed', Content = 'Config list updated.', Duration = 2})
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Delete Config',
+			Callback = function()
+				if selectedConfig and selectedConfig ~= '' then
+					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
+					if callSafely(isfile, path) then
+						callSafely(delfile, path)
+						RayfieldLibrary:Notify({Title = 'Deleted', Content = "Deleted '" .. selectedConfig .. "'", Duration = 3})
+						ConfigDropdown:Refresh(getConfigs())
+						selectedConfig = ''
+					else
+						RayfieldLibrary:Notify({Title = 'Not Found', Content = "Config '" .. selectedConfig .. "' does not exist.", Duration = 3})
+					end
+				end
+			end,
+		})
+	end
 end
 
 local function fadeOutKeyUI(KeyMain)
