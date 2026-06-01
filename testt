@@ -903,6 +903,7 @@ local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('htt
 
 local CFileName = nil
 local CEnabled = false
+local autoSaveConfig = false
 local Minimised = false
 local Hidden = false
 local Debounce = false
@@ -1143,8 +1144,9 @@ local function LoadConfiguration(Configuration)
 	return changed
 end
 
-local function SaveConfiguration()
+local function SaveConfiguration(manual)
 	if not CEnabled or not globalLoaded then return end
+	if not manual and not autoSaveConfig then return end
 
 	if debugX then
 		print('Saving')
@@ -1658,6 +1660,7 @@ local function createSettings(window)
 
 	do
 		local selectedConfig = CFileName or ""
+		local pendingName = ""
 
 		local function getConfigs()
 			local configs = {}
@@ -1685,34 +1688,6 @@ local function createSettings(window)
 			end,
 		})
 
-		newTab:CreateButton({
-			Name = 'Save Config',
-			Callback = function()
-				if selectedConfig and selectedConfig ~= '' then
-					CFileName = selectedConfig
-					SaveConfiguration()
-					RayfieldLibrary:Notify({Title = 'Config Saved', Content = "Saved as '" .. selectedConfig .. "'", Duration = 3})
-				end
-			end,
-		})
-
-		newTab:CreateButton({
-			Name = 'Load Config',
-			Callback = function()
-				if selectedConfig and selectedConfig ~= '' then
-					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
-					if callSafely(isfile, path) then
-						local changed = LoadConfiguration(callSafely(readfile, path))
-						if changed then
-							RayfieldLibrary:Notify({Title = 'Config Loaded', Content = "Loaded '" .. selectedConfig .. "'", Duration = 3})
-						end
-					else
-						RayfieldLibrary:Notify({Title = 'Not Found', Content = "Config '" .. selectedConfig .. "' does not exist.", Duration = 3})
-					end
-				end
-			end,
-		})
-
 		newTab:CreateInput({
 			Name = 'New Config Name',
 			CurrentValue = '',
@@ -1720,15 +1695,46 @@ local function createSettings(window)
 			RemoveTextAfterFocusLost = false,
 			Ext = true,
 			Callback = function(text)
-				if text and text ~= '' then
+				pendingName = text or ''
+			end,
+		})
+
+		newTab:CreateSection('Actions')
+
+		newTab:CreateToggle({
+			Name = 'Auto Save Config',
+			CurrentValue = false,
+			Ext = true,
+			Callback = function(value)
+				autoSaveConfig = value
+				RayfieldLibrary:Notify({Title = 'Auto Save', Content = value and 'Auto save enabled.' or 'Auto save disabled.', Duration = 2})
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Save Config',
+			Callback = function()
+				local name = pendingName ~= '' and pendingName or selectedConfig
+				if name ~= '' then
 					ensureFolder(ConfigurationFolder)
-					local path = ConfigurationFolder .. '/' .. text .. ConfigurationExtension
-					if not callSafely(isfile, path) then
-						callSafely(writefile, path, '{}')
-						RayfieldLibrary:Notify({Title = 'Config Created', Content = "Created '" .. text .. "'", Duration = 3})
-						ConfigDropdown:Refresh(getConfigs())
+					CFileName = name
+					SaveConfiguration(true)
+					RayfieldLibrary:Notify({Title = 'Config Saved', Content = "Saved as '" .. name .. "'", Duration = 3})
+					ConfigDropdown:Refresh(getConfigs())
+				end
+			end,
+		})
+
+		newTab:CreateButton({
+			Name = 'Load Config',
+			Callback = function()
+				if selectedConfig ~= '' then
+					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
+					if callSafely(isfile, path) then
+						LoadConfiguration(callSafely(readfile, path))
+						RayfieldLibrary:Notify({Title = 'Config Loaded', Content = "Loaded '" .. selectedConfig .. "'", Duration = 3})
 					else
-						RayfieldLibrary:Notify({Title = 'Already Exists', Content = "A config named '" .. text .. "' already exists.", Duration = 3})
+						RayfieldLibrary:Notify({Title = 'Not Found', Content = "Config '" .. selectedConfig .. "' does not exist.", Duration = 3})
 					end
 				end
 			end,
@@ -1745,7 +1751,7 @@ local function createSettings(window)
 		newTab:CreateButton({
 			Name = 'Delete Config',
 			Callback = function()
-				if selectedConfig and selectedConfig ~= '' then
+				if selectedConfig ~= '' then
 					local path = ConfigurationFolder .. '/' .. selectedConfig .. ConfigurationExtension
 					if callSafely(isfile, path) then
 						callSafely(delfile, path)
