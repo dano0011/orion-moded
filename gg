@@ -1908,10 +1908,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	local resizing, resizeStart, sizeStart = false, nil, nil
 
+	resizeHandle.MouseEnter:Connect(function()
+		if resizing or Hidden then return end
+		TweenService:Create(resizeHandle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 8, 1, 8), Position = UDim2.new(0, -4, 0, -4), ImageTransparency = 0.5}):Play()
+	end)
+
+	resizeHandle.MouseLeave:Connect(function()
+		if resizing or Hidden then return end
+		TweenService:Create(resizeHandle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), ImageTransparency = 0.7}):Play()
+	end)
+
 	resizeHandle.InputBegan:Connect(function(input)
 		if Minimised or Hidden then return end
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			resizing = true
+			TweenService:Create(resizeHandle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 8, 1, 8), Position = UDim2.new(0, -4, 0, -4), ImageTransparency = 0}):Play()
 			resizeStart = UserInputService:GetMouseLocation()
 			sizeStart = Vector2.new(Main.AbsoluteSize.X, Main.AbsoluteSize.Y)
 		end
@@ -1920,6 +1931,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			resizing = false
+			TweenService:Create(resizeHandle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0, 0, 0, 0), ImageTransparency = 0.7}):Play()
 		end
 	end)
 
