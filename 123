@@ -1884,6 +1884,48 @@ function RayfieldLibrary:CreateWindow(Settings)
 	makeDraggable(Main, Topbar, false, {dragOffset, dragOffsetMobile})
 	if dragBar then dragBar.Position = useMobileSizing and UDim2.new(0.5, 0, 0.5, dragOffsetMobile) or UDim2.new(0.5, 0, 0.5, dragOffset) makeDraggable(Main, dragInteract, true, {dragOffset, dragOffsetMobile}) end
 
+	local minResizeW = 400
+	local minResizeH = useMobileSizing and 200 or 350
+
+	local resizeHandle = Instance.new("TextButton")
+	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
+	resizeHandle.Position = UDim2.new(1, -20, 1, -20)
+	resizeHandle.BackgroundTransparency = 1
+	resizeHandle.Text = "⋱"
+	resizeHandle.TextColor3 = Color3.fromRGB(255, 255, 255)
+	resizeHandle.TextSize = 18
+	resizeHandle.Font = Enum.Font.GothamBold
+	resizeHandle.ZIndex = 10
+	resizeHandle.Parent = Main
+
+	local resizing, resizeStart, sizeStart = false, nil, nil
+
+	resizeHandle.InputBegan:Connect(function(input)
+		if Minimised or Hidden then return end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			resizing = true
+			resizeStart = UserInputService:GetMouseLocation()
+			sizeStart = Vector2.new(Main.AbsoluteSize.X, Main.AbsoluteSize.Y)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			resizing = false
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if not resizing then return end
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			local delta = UserInputService:GetMouseLocation() - resizeStart
+			local newW = math.max(minResizeW, sizeStart.X + delta.X)
+			local newH = math.max(minResizeH, sizeStart.Y + delta.Y)
+			Main.Size = UDim2.new(0, newW, 0, newH)
+			Topbar.Size = UDim2.new(0, newW, 0, 45)
+		end
+	end)
+
 	for _, TabButton in ipairs(TabList:GetChildren()) do
 		if TabButton.ClassName == "Frame" and TabButton.Name ~= "Placeholder" then
 			TabButton.BackgroundTransparency = 1
