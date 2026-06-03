@@ -862,7 +862,6 @@ do
 	Rayfield.Main.Search.Shadow.Image = customAssets[tostring(5587865193)]
 	Rayfield.Notifications.Template.Icon.Image = customAssets[tostring(77891951053543)]
 	Rayfield.Notifications.Template.Shadow.Image = customAssets[tostring(3523728077)]
-	Rayfield.Loading.Banner.Image = customAssets[tostring(111263549366178)]
 
 end -- custom asset block
 
@@ -885,17 +884,17 @@ local Main = Rayfield.Main
 local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
 local Elements = Main.Elements
-local LoadingFrame = Main.LoadingFrame
 local TabList = Main.TabList
 local dragBar = Rayfield:FindFirstChild('Drag')
 local dragInteract = dragBar and dragBar.Interact or nil
 local dragBarCosmetic = dragBar and dragBar.Drag or nil
 
+Main.LoadingFrame:Destroy()
+
 local dragOffset = 255
 local dragOffsetMobile = 150
 
 Rayfield.DisplayOrder = 100
-LoadingFrame.Version.Text = Release
 
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
 local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua')
@@ -1774,18 +1773,6 @@ local function fadeOutKeyUI(KeyMain)
 end
 
 function RayfieldLibrary:CreateWindow(Settings)
-	if Rayfield:FindFirstChild('Loading') then
-		if getgenv and not getgenv().rayfieldCached then
-			Rayfield.Enabled = true
-			Rayfield.Loading.Visible = true
-
-			task.wait(1.4)
-			Rayfield.Loading.Visible = false
-		end
-	end
-
-	if getgenv then getgenv().rayfieldCached = true end
-
 	if not correctBuild and not Settings.DisableBuildWarnings then
 		task.delay(3, 
 			function() 
@@ -1814,25 +1801,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
-	Main.Size = UDim2.new(0, 420, 0, 100)
+	Main.Size = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)
 	Main.Visible = true
 	Main.BackgroundTransparency = 1
 	if Main:FindFirstChild('Notice') then Main.Notice.Visible = false end
 	Main.Shadow.Image.ImageTransparency = 1
 
-	LoadingFrame.Title.TextTransparency = 1
-	LoadingFrame.Subtitle.TextTransparency = 1
-
 	if Settings.ShowText then
 		MPrompt.Title.Text = 'Show '..Settings.ShowText
-	end
-
-	LoadingFrame.Version.TextTransparency = 1
-	LoadingFrame.Title.Text = Settings.LoadingTitle or "Rayfield"
-	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "Interface Suite"
-
-	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
-		LoadingFrame.Version.Text = "Rayfield UI"
 	end
 
 	if Settings.Icon and Settings.Icon ~= 0 and Topbar:FindFirstChild('Icon') then
@@ -1870,7 +1846,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	Topbar.Visible = false
 	Elements.Visible = false
-	LoadingFrame.Visible = true
 
 	if not Settings.DisableRayfieldPrompts then
 		task.spawn(function()
@@ -2123,15 +2098,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Notifications.Visible = true
 	Rayfield.Enabled = true
 
-	task.wait(0.5)
 	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
-	task.wait(0.1)
-	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
-	task.wait(0.05)
-	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
-	task.wait(0.05)
-	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 
 
 	Elements.Template.LayoutOrder = 100000
@@ -3652,15 +3620,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	Elements.Visible = true
 
-
-	task.wait(1.1)
-	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 390, 0, 90)}):Play()
-	task.wait(0.3)
-	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
-	task.wait(0.1)
-	TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
 
 	Topbar.BackgroundTransparency = 1
