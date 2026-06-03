@@ -1083,12 +1083,13 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local renderStepped = RunService.RenderStepped:Connect(function()
 		if dragging and not Hidden then
 			local position = UserInputService:GetMouseLocation() + relative + offset
+			local dynamicOffset = Main.AbsoluteSize.Y / 2 + 17
 			if enableTaptic and tapticOffset then
 				TweenService:Create(object, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y)}):Play()
-				TweenService:Create(dragObject.Parent, TweenInfo.new(0.05, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y + ((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))}):Play()
+				TweenService:Create(dragObject.Parent, TweenInfo.new(0.05, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(position.X, position.Y + dynamicOffset)}):Play()
 			else
 				if dragBar and tapticOffset then
-					dragBar.Position = UDim2.fromOffset(position.X, position.Y + ((useMobileSizing and tapticOffset[2]) or tapticOffset[1]))
+					dragBar.Position = UDim2.fromOffset(position.X, position.Y + dynamicOffset)
 				end
 				object.Position = UDim2.fromOffset(position.X, position.Y)
 			end
@@ -1887,15 +1888,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local minResizeW = 400
 	local minResizeH = useMobileSizing and 200 or 350
 
-	local resizeHandle = Instance.new("TextButton")
-	resizeHandle.Size = UDim2.new(0, 20, 0, 20)
+	local resizeHandle = Instance.new("ImageButton")
+	resizeHandle.Size = UDim2.new(0, 24, 0, 24)
 	resizeHandle.AnchorPoint = Vector2.new(1, 1)
-	resizeHandle.Position = UDim2.new(1, 0, 1, 0)
+	resizeHandle.Position = UDim2.new(1, -4, 1, -4)
 	resizeHandle.BackgroundTransparency = 1
-	resizeHandle.Text = "⋱"
-	resizeHandle.TextColor3 = Color3.fromRGB(255, 255, 255)
-	resizeHandle.TextSize = 18
-	resizeHandle.Font = Enum.Font.GothamBold
+	resizeHandle.Image = "rbxassetid://7368471234"
+	resizeHandle.ImageColor3 = Color3.fromRGB(255, 255, 255)
 	resizeHandle.ZIndex = 10
 	resizeHandle.Parent = Main
 
