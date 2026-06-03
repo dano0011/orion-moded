@@ -1924,7 +1924,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local newH = math.max(minResizeH, sizeStart.Y + delta.Y)
 			Main.Size = UDim2.new(0, newW, 0, newH)
 			Topbar.Size = UDim2.new(0, newW, 0, 45)
-			if dragBar then dragBar.Position = UDim2.new(0.5, 0, 0.5, newH / 2 + 17) end
+			if dragBar then dragBar.Position = UDim2.new(Main.Position.X.Scale, Main.Position.X.Offset, Main.Position.Y.Scale, Main.Position.Y.Offset + newH / 2 + 17) end
 		end
 	end)
 
@@ -2655,6 +2655,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			local Label = Elements.Template.Label:Clone()
 			Label.Title.Text = LabelText
+			Label.Title.TextWrapped = true
+			Label.Title.AutomaticSize = Enum.AutomaticSize.Y
+			Label.AutomaticSize = Enum.AutomaticSize.Y
 			Label.Visible = true
 			Label.Parent = TabPage
 
@@ -2726,6 +2729,13 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local Paragraph = Elements.Template.Paragraph:Clone()
 			Paragraph.Title.Text = ParagraphSettings.Title
 			Paragraph.Content.Text = ParagraphSettings.Content
+			Paragraph.Title.TextWrapped = true
+			Paragraph.Content.TextWrapped = true
+			Paragraph.Title.Size = UDim2.new(1, -20, 0, 14)
+			Paragraph.Content.Size = UDim2.new(1, -20, 0, 14)
+			Paragraph.Title.AutomaticSize = Enum.AutomaticSize.Y
+			Paragraph.Content.AutomaticSize = Enum.AutomaticSize.Y
+			Paragraph.AutomaticSize = Enum.AutomaticSize.Y
 			Paragraph.Visible = true
 			Paragraph.Parent = TabPage
 
