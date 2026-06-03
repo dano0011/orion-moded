@@ -1901,6 +1901,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	resizeHandle.Position = UDim2.new(0, 0, 0, 0)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Image = "rbxassetid://120997033468887"
+	resizeHandle.ImageTransparency = 0.7
 	resizeHandle.ImageColor3 = Color3.fromRGB(255, 255, 255)
 	resizeHandle.ZIndex = 11
 	resizeHandle.Parent = resizeContainer
