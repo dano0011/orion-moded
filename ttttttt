@@ -1889,7 +1889,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local minResizeH = useMobileSizing and 200 or 350
 
 	local resizeContainer = Instance.new("Frame")
-	resizeContainer.Size = UDim2.new(0, 55, 0, 55)
+	resizeContainer.Size = UDim2.new(0, 60, 0, 60)
 	resizeContainer.AnchorPoint = Vector2.new(0, 0)
 	resizeContainer.Position = UDim2.new(1, 0, 1, 0)
 	resizeContainer.BackgroundTransparency = 1
@@ -1897,7 +1897,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	resizeContainer.Parent = Main
 
 	local resizeHandle = Instance.new("ImageButton")
-	resizeHandle.Size = UDim2.new(1, 0, 1, 0)
+	resizeHandle.Size = UDim2.new(1, 12, 1, 12)
+	resizeHandle.Position = UDim2.new(0, -10, 0, -10)
 	resizeHandle.BackgroundTransparency = 1
 	resizeHandle.Image = "rbxassetid://120997033468887"
 	resizeHandle.ImageColor3 = Color3.fromRGB(255, 255, 255)
