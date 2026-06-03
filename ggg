@@ -129,6 +129,7 @@ local settingsTable = {
 	},
 	System = {
 		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
+		snow = {Type = 'toggle', Value = false, Name = 'Snow'},
 	}
 }
 
@@ -891,6 +892,16 @@ local dragBarCosmetic = dragBar and dragBar.Drag or nil
 
 Main.LoadingFrame:Destroy()
 
+local SnowContainer = Instance.new("Frame")
+SnowContainer.Name = "Snow"
+SnowContainer.Size = UDim2.new(1, 0, 1, 0)
+SnowContainer.BackgroundTransparency = 1
+SnowContainer.BorderSizePixel = 0
+SnowContainer.ClipsDescendants = true
+SnowContainer.ZIndex = 1
+SnowContainer.Visible = false
+SnowContainer.Parent = Main
+
 local dragOffset = 255
 local dragOffsetMobile = 150
 
@@ -908,6 +919,12 @@ local Debounce = false
 local searchOpen = false
 local Notifications = Rayfield.Notifications
 local keybindConnections = {} -- For storing keybind connections to disconnect when Rayfield is destroyed
+local Snowflakes = {}
+local snowEnabled = getSetting("System", "snow")
+local snowRunning = false
+local maxSnow = useMobileSizing and 35 or 60
+local snowSpawnDelay = useMobileSizing and 0.08 or 0.05
+local updateSnowState
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
@@ -1403,6 +1420,7 @@ local function setTabButtonsVisible(show)
 end
 
 local function Hide(notify: boolean?)
+	updateSnowState()
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
@@ -1482,6 +1500,7 @@ local function Maximise()
 
 	task.wait(0.5)
 	Debounce = false
+	updateSnowState()
 end
 
 
@@ -1536,11 +1555,13 @@ local function Unhide()
 	task.wait(0.5)
 	Minimised = false
 	Debounce = false
+	updateSnowState()
 end
 
 local function Minimise()
 	Debounce = true
 	Topbar.ChangeSize.Image = customAssets[tostring(11036884234)]
+	updateSnowState()
 
 	Topbar.UIStroke.Color = SelectedTheme.ElementStroke
 
@@ -1567,6 +1588,68 @@ local function Minimise()
 	Debounce = false
 end
 
+local function clearSnow()
+	for _, flake in ipairs(Snowflakes) do
+		if flake and flake.Parent then
+			flake:Destroy()
+		end
+	end
+	table.clear(Snowflakes)
+end
+
+local function createSnowFlake()
+	if not snowRunning or #Snowflakes >= maxSnow then
+		return
+	end
+
+	local size = math.random(2, 4)
+	local flake = Instance.new("Frame")
+	flake.Size = UDim2.fromOffset(size, size)
+	flake.Position = UDim2.fromOffset(math.random(0, math.max(Main.AbsoluteSize.X - size, 1)), -10)
+	flake.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	flake.BackgroundTransparency = math.random(20, 40) / 100
+	flake.BorderSizePixel = 0
+	flake.ZIndex = 1
+	flake.Parent = SnowContainer
+
+	table.insert(Snowflakes, flake)
+
+	local tween = TweenService:Create(flake, TweenInfo.new(math.random(2, 15), Enum.EasingStyle.Linear), {
+		Position = UDim2.fromOffset(flake.Position.X.Offset, Main.AbsoluteSize.Y + 10)
+	})
+
+	tween:Play()
+	tween.Completed:Connect(function()
+		local index = table.find(Snowflakes, flake)
+		if index then
+			table.remove(Snowflakes, index)
+		end
+		if flake.Parent then
+			flake:Destroy()
+		end
+	end)
+end
+
+updateSnowState = function()
+	local shouldSnow = snowEnabled and not Hidden and not Minimised and Main.Visible and not rayfieldDestroyed
+	SnowContainer.Visible = shouldSnow
+	if shouldSnow then
+		if snowRunning then
+			return
+		end
+		snowRunning = true
+		task.spawn(function()
+			while snowRunning and not rayfieldDestroyed do
+				createSnowFlake()
+				task.wait(snowSpawnDelay)
+			end
+		end)
+	else
+		snowRunning = false
+		clearSnow()
+	end
+end
+
 local function saveSettings() -- Save settings to config file
 	local encoded
 	local success, err = pcall(function()
@@ -1589,6 +1672,10 @@ local function updateSetting(category: string, setting: string, value: any)
 	end
 	settingsTable[category][setting].Value = value
 	overriddenSettings[category .. "." .. setting] = nil -- If user changes an overriden setting, remove the override
+	if category == "System" and setting == "snow" then
+		snowEnabled = value
+		updateSnowState()
+	end
 	saveSettings()
 end
 
@@ -3745,6 +3832,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	end)
 
 	if not success then warn('Rayfield had an issue creating settings.') end
+	snowEnabled = getSetting("System", "snow")
+	updateSnowState()
 
 	-- Report after createSettings so loadSettings() has run and usageAnalytics reflects the user's saved preference
 	if reporter and getSetting("System", "usageAnalytics") then
@@ -3812,6 +3901,7 @@ end
 local hideHotkeyConnection -- Has to be initialized here since the connection is made later in the script
 function RayfieldLibrary:Destroy()
 	rayfieldDestroyed = true
+	updateSnowState()
 	if hideHotkeyConnection then
 		hideHotkeyConnection:Disconnect()
 	end
