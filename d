@@ -1889,9 +1889,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local minResizeH = useMobileSizing and 200 or 350
 
 	local resizeContainer = Instance.new("Frame")
-	resizeContainer.Size = UDim2.new(0, 36, 0, 36)
-	resizeContainer.AnchorPoint = Vector2.new(1, 1)
-	resizeContainer.Position = UDim2.new(1, 10, 1, 10)
+	resizeContainer.Size = UDim2.new(0, 56, 0, 56)
+	resizeContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+	resizeContainer.Position = UDim2.new(1, 0, 1, 0)
 	resizeContainer.BackgroundTransparency = 1
 	resizeContainer.ZIndex = 10
 	resizeContainer.Parent = Main
