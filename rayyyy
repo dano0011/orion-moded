@@ -3082,6 +3082,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 			DropdownSearchInput.ZIndex = 11
 			DropdownSearchInput.Parent = DropdownSearch
 
+			local DropdownListPosition = Dropdown.List.Position
+			local DropdownSearchOffset = DropdownSearch.Size.Y.Offset + 10
+
 			local function IsDropdownOption(Option)
 				return Option.ClassName == "Frame" and Option.Name ~= "Placeholder"
 			end
@@ -3107,6 +3110,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 				if Dropdown.List.Visible then
 					DropdownSearchInput.Text = ""
 					Debounce = true
+					Dropdown.List.Position = DropdownListPosition
 					TweenService:Create(Dropdown, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -10, 0, 45)}):Play()
 					for _, DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
 						if IsDropdownOption(DropdownOpt) then
@@ -3123,7 +3127,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 					Debounce = false
 				else
 					DropdownSearch.Visible = true
-					Dropdown.List.Position = UDim2.new(0, 0, 0, 87)
+					Dropdown.List.Position = UDim2.new(DropdownListPosition.X.Scale, DropdownListPosition.X.Offset, DropdownListPosition.Y.Scale, DropdownListPosition.Y.Offset + DropdownSearchOffset)
 					TweenService:Create(Dropdown, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -10, 0, 222)}):Play()
 					Dropdown.List.Visible = true
 					TweenService:Create(Dropdown.List, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {ScrollBarImageTransparency = 0.7}):Play()
@@ -3240,6 +3244,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 						if not DropdownSettings.MultipleOptions then
 							DropdownSearchInput.Text = ""
 							task.wait(0.1)
+							Dropdown.List.Position = DropdownListPosition
 							TweenService:Create(Dropdown, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, -10, 0, 45)}):Play()
 							for _, DropdownOpt in ipairs(Dropdown.List:GetChildren()) do
 								if IsDropdownOption(DropdownOpt) then
