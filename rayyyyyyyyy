@@ -2821,11 +2821,11 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Label.Title.TextTransparency = 1
 
 			Label:SetAttribute("BackgroundTransparencyTarget", Color and 0.8 or 0)
-			Label:SetAttribute("UIStrokeTransparencyTarget", Color and 0.7 or 0)
+			Label:SetAttribute("UIStrokeTransparencyTarget", 1)
 			Label:SetAttribute("TitleTextTransparencyTarget", Color and 0.2 or 0)
 
 			TweenService:Create(Label, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = Color and 0.8 or 0}):Play()
-			TweenService:Create(Label.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = Color and 0.7 or 0}):Play()
+			TweenService:Create(Label.UIStroke, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 			TweenService:Create(Label.Icon, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.2}):Play()
 			TweenService:Create(Label.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = Color and 0.2 or 0}):Play()
 
