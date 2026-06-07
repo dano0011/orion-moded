@@ -2789,6 +2789,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 			local Label = Elements.Template.Label:Clone()
 			Label.Title.Text = LabelText
 			Label.Title.TextWrapped = true
+			Label.Title.Position = UDim2.new(0, 10, 0.5, 0)
+			Label.Title.Size = UDim2.new(1, -20, 0, 14)
 			Label.Title.AutomaticSize = Enum.AutomaticSize.Y
 			Label.AutomaticSize = Enum.AutomaticSize.Y
 			Label.Visible = true
@@ -2802,14 +2804,15 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Label.Icon.Image = img
 				if rectOffset then Label.Icon.ImageRectOffset = rectOffset end
 				if rectSize then Label.Icon.ImageRectSize = rectSize end
+				Label.Icon.Visible = true
 			else
 				Label.Icon.Image = ""
+				Label.Icon.Visible = false
 			end
 
 			if Icon and Label:FindFirstChild('Icon') then
 				Label.Title.Position = UDim2.new(0, 45, 0.5, 0)
 				Label.Title.Size = UDim2.new(1, -100, 0, 14)
-				Label.Icon.Visible = true
 			end
 
 			Label.Icon.ImageTransparency = 1
@@ -2828,6 +2831,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 			function LabelValue:Set(NewLabel, Icon, Color)
 				Label.Title.Text = NewLabel
+				Label.Title.Position = UDim2.new(0, 10, 0.5, 0)
+				Label.Title.Size = UDim2.new(1, -20, 0, 14)
 
 				if Color then
 					Label.BackgroundColor3 = Color or SelectedTheme.SecondaryElementBackground
@@ -2844,6 +2849,9 @@ function RayfieldLibrary:CreateWindow(Settings)
 					if rectSize then Label.Icon.ImageRectSize = rectSize end
 
 					Label.Icon.Visible = true
+				elseif Label:FindFirstChild('Icon') then
+					Label.Icon.Image = ""
+					Label.Icon.Visible = false
 				end
 			end
 
