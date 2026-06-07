@@ -3077,8 +3077,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 			DropdownSearchInput.Size = UDim2.new(1, -20, 1, 0)
 			DropdownSearchInput.Text = ""
 			DropdownSearchInput.TextColor3 = SelectedTheme.TextColor
+			DropdownSearchInput.Font = Dropdown.Selected.Font
 			DropdownSearchInput.TextSize = Dropdown.Selected.TextSize
 			DropdownSearchInput.TextXAlignment = Enum.TextXAlignment.Left
+			DropdownSearchInput.TextYAlignment = Dropdown.Selected.TextYAlignment
 			DropdownSearchInput.ZIndex = 11
 			DropdownSearchInput.Parent = DropdownSearch
 
