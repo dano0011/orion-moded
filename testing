@@ -49,6 +49,7 @@ local Library do
     local TweenService = cloneref(game:GetService("TweenService"))
     local MarketplaceService = cloneref(game:GetService("MarketplaceService"))
     local Lighting = cloneref(game:GetService("Lighting"))
+    local StarterGui = cloneref(game:GetService("StarterGui"))
     local TeleportService = cloneref(game:GetService("TeleportService"))
     local Stats = cloneref(game:GetService("Stats"))
 
@@ -142,6 +143,20 @@ local Library do
             FilterUrl = "https://raw.githubusercontent.com/dano0011/orion-moded/main/bll",
             MessagesCountDeletionInterval = 30,
             AnonymousMode = true,
+        },
+
+        TrialManager = {
+            HttpUrl = "http://109.199.111.222:3000",
+            Token = "gchat_live_e3f8a2d5b9c10476",
+            Cached = false,
+            CachedTrialActive = false,
+            CachedRemainingMs = 0,
+            CachedClaimed = false,
+            CachedExpired = false,
+            LastKnownTrialActive = false,
+            LastKnownRemainingMs = 0,
+            LastKnownSyncedAt = 0,
+            CachedDefaultMinutes = nil,
         },
 
         MenuKeybind = tostring(Enum.KeyCode.Z),
@@ -1146,7 +1161,8 @@ local Library do
             self.UnusedHolder:Clean()
         end
 
-        Library = nil 
+        Library._Unloaded = true
+        Library = nil
         getgenv().Library = nil
     end
 
@@ -4069,6 +4085,32 @@ local Library do
                 return
             end
 
+            if PacketType == "trial_expire" and type(Packet.trialExpire) == "table" then
+                local TrialData = Packet.trialExpire
+                local TargetSenderId = tostring(TrialData.targetSenderId or "")
+                local TargetHwid = tostring(TrialData.targetHwid or "")
+                local LocalSenderId = tostring(LocalPlayer.UserId or "")
+                local LocalHwid = ""
+
+                pcall(function()
+                    if self.GetHwidForTrial then
+                        LocalHwid = tostring(self.GetHwidForTrial() or "")
+                    end
+                end)
+
+                if (TargetSenderId ~= "" and TargetSenderId == LocalSenderId)
+                    or (TargetHwid ~= "" and LocalHwid ~= "" and TargetHwid == LocalHwid) then
+                    task.spawn(function()
+                        pcall(function()
+                            if self.TriggerTrialExpiryFlow then
+                                self.TriggerTrialExpiryFlow(tostring(TrialData.reason or "Your free trial has ended."))
+                            end
+                        end)
+                    end)
+                end
+                return
+            end
+
             if PacketType == "update_notify" then
                 local Upd = Packet.updateNotify or {}
                 local TargetGameId = tostring(Upd.targetGameId or "")
@@ -4646,67 +4688,67 @@ local Library do
         local function Connect()
             if Destroyed then return end
 
-            pcall(function()
-                if Socket then
-                    SocketClose(Socket)
-                    Socket = nil
-                end
-            end)
-            Connected = false
             task.spawn(function()
+                pcall(function()
+                    if Socket then
+                        SocketClose(Socket)
+                        Socket = nil
+                    end
+                end)
+                Connected = false
                 local Success, Ws = pcall(function()
                     return WebSocketFunction(BuildWsUrl())
                 end)
-                if Destroyed then return end
                 if not Success or not Ws then
                     task.delay(GC.RetryDelay, Connect)
                     return
                 end
-            Socket = Ws
-            Connected = true
-            if PingThread then
-                pcall(function()
-                    task.cancel(PingThread)
-                end)
-            end
-            PingThread = task.spawn(function()
-                while Connected and not Destroyed do
-                    task.wait(GC.PresenceInterval)
-                    if Connected and Socket then
-                        local Payload = JsonEncode({type = "ping"})
-                        if Payload then
-                            SocketSend(Socket, Payload)
+                Socket = Ws
+                Connected = true
+                if PingThread then
+                    pcall(function()
+                        task.cancel(PingThread)
+                    end)
+                end
+                PingThread = task.spawn(function()
+                    while Connected and not Destroyed do
+                        task.wait(GC.PresenceInterval)
+                        if Connected and Socket then
+                            local Payload = JsonEncode({type = "ping"})
+                            if Payload then
+                                SocketSend(Socket, Payload)
+                            end
                         end
                     end
+                end)
+
+                if MessageConnection and type(MessageConnection.Disconnect) == "function" then
+                    pcall(function()
+                        MessageConnection:Disconnect()
+                    end)
                 end
+
+                if CloseConnection and type(CloseConnection.Disconnect) == "function" then
+                    pcall(function()
+                        CloseConnection:Disconnect()
+                    end)
+                end
+
+                MessageConnection = ConnectSocketSignal(Socket.OnMessage or Socket.MessageReceived, function(Raw)
+                    local Packet = JsonDecode(Raw)
+                    if Packet and type(Packet) == "table" then
+                        pcall(HandlePacket, Packet)
+                    end
+                end, Socket)
+
+                CloseConnection = ConnectSocketSignal(Socket.OnClose or Socket.Closed, function()
+                    Connected = false
+                    Socket = nil
+                    if not Destroyed then
+                        task.delay(GC.RetryDelay, Connect)
+                    end
+                end, Socket)
             end)
-
-            if MessageConnection and type(MessageConnection.Disconnect) == "function" then
-                pcall(function()
-                    MessageConnection:Disconnect()
-                end)
-            end
-
-            if CloseConnection and type(CloseConnection.Disconnect) == "function" then
-                pcall(function()
-                    CloseConnection:Disconnect()
-                end)
-            end
-
-            MessageConnection = ConnectSocketSignal(Socket.OnMessage or Socket.MessageReceived, function(Raw)
-                local Packet = JsonDecode(Raw)
-                if Packet and type(Packet) == "table" then
-                    pcall(HandlePacket, Packet)
-                end
-            end, Socket)
-
-            CloseConnection = ConnectSocketSignal(Socket.OnClose or Socket.Closed, function()
-                Connected = false
-                Socket = nil
-                if not Destroyed then
-                    task.delay(GC.RetryDelay, Connect)
-                end
-            end, Socket)
         end
         TableInsert(self.CleanupCallbacks, function()
             Destroyed = true
@@ -4926,14 +4968,713 @@ local Library do
             self._ExpressWidgets = nil
         end)
     end
+    do
+        local function GetHwidForTrial()
+            local ok, result = pcall(function()
+                if gethwid then return gethwid() end
+                if getexecutorhwid then return getexecutorhwid() end
+                if get_hwid then return get_hwid() end
+                return ""
+            end)
+            return ok and tostring(result or "") or ""
+        end
+
+        local function GetTrialGameName()
+            local success, info = pcall(function()
+                return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+            end)
+            if success and info and info.Name then
+                return info.Name
+            end
+            return tostring(game.Name or "Unknown")
+        end
+
+        local function NotifyTrial(Title, Description, Duration)
+            pcall(function()
+                Library:MakeNotification({
+                    Name = Title,
+                    Content = Description,
+                    Time = Duration or 4
+                })
+            end)
+        end
+
+        local function OpenPremiumInvite()
+            local PremiumUrl = "https://express-hub.sellhub.cx/"
+            local copied = setclipboard and pcall(setclipboard, PremiumUrl)
+
+            if copied then
+                NotifyTrial("Premium Required", "Premium website copied to clipboard.", 5)
+            else
+                NotifyTrial("Copied!", "Premium website copied to clipboard.", 5)
+            end
+        end
+
+        local function UpdateLastKnownTrialState(isActive, remainingMs)
+            local TrialMgr = Library.TrialManager
+            if not TrialMgr then
+                return
+            end
+
+            local RemainingMs = math.max(0, tonumber(remainingMs) or 0)
+            TrialMgr.LastKnownTrialActive = isActive == true and RemainingMs > 0
+            TrialMgr.LastKnownRemainingMs = TrialMgr.LastKnownTrialActive and RemainingMs or 0
+            TrialMgr.LastKnownSyncedAt = TrialMgr.LastKnownTrialActive and tick() or 0
+        end
+
+        local function SetTrialCacheState(isActive, remainingMs, isClaimed, isExpired)
+            local TrialMgr = Library.TrialManager
+            if not TrialMgr then
+                return
+            end
+
+            TrialMgr.Cached = true
+            TrialMgr.CachedTrialActive = isActive == true
+            TrialMgr.CachedRemainingMs = math.max(0, tonumber(remainingMs) or 0)
+            TrialMgr.CachedClaimed = isClaimed == true
+            TrialMgr.CachedExpired = isExpired == true
+
+            if TrialMgr.CachedTrialActive then
+                UpdateLastKnownTrialState(true, TrialMgr.CachedRemainingMs)
+            elseif TrialMgr.CachedClaimed or TrialMgr.CachedExpired then
+                UpdateLastKnownTrialState(false, 0)
+            end
+        end
+
+        local function BuildTrialPayload(hwid)
+            return {
+                hwid = hwid,
+                senderId = tostring(LocalPlayer.UserId),
+                username = tostring(LocalPlayer.Name),
+                gameName = GetTrialGameName(),
+                placeId = tonumber(game.PlaceId) or 0
+            }
+        end
+
+        local function RequestTrialJson(route, payload)
+            local TrialMgr = Library.TrialManager
+            local ok, result = pcall(function()
+                local response = RequestFunction({
+                    Url = TrialMgr.HttpUrl .. route,
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["x-chat-token"] = TrialMgr.Token
+                    },
+                    Body = HttpService:JSONEncode(payload)
+                })
+                if not response or type(response.Body) ~= "string" or response.Body == "" then
+                    return nil
+                end
+                return HttpService:JSONDecode(response.Body)
+            end)
+
+            return ok and result or nil
+        end
+
+        local function TriggerTrialExpiryFlow(notificationContent)
+            if Library._TrialExpiryHandling or Library._Unloaded then
+                return
+            end
+
+            Library._TrialExpiryHandling = true
+            Library._TrialExpired = true
+
+            SetTrialCacheState(false, 0, true, true)
+
+            pcall(function()
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Trial Ended",
+                    Text = tostring(notificationContent or "Your free trial has ended."),
+                    Duration = 5
+                })
+            end)
+
+            task.delay(0.35, function()
+                pcall(function()
+                    if getgenv().Library then
+                        getgenv().Library:Unload()
+                    elseif Library then
+                        Library:Unload()
+                    end
+                end)
+            end)
+
+            task.spawn(function()
+                pcall(ShowExpiredTrialScreen)
+            end)
+        end
+
+        local function ClaimTrialWithHwid(durationMinutes)
+            local hwid = GetHwidForTrial()
+            if hwid == "" then
+                return false, "Could not get HWID"
+            end
+
+            local claimPayload = BuildTrialPayload(hwid)
+            claimPayload.durationMinutes = durationMinutes
+            local decoded = RequestTrialJson("/trial/claim", claimPayload)
+
+            if decoded and decoded.ok then
+                SetTrialCacheState(true, decoded.remainingMs or (durationMinutes * 60 * 1000), true, false)
+                pcall(UpdatePresence)
+                return true, "Trial claimed successfully"
+            end
+
+            local checkDecoded = RequestTrialJson("/trial/check", BuildTrialPayload(hwid))
+            if checkDecoded and checkDecoded.ok and checkDecoded.active then
+                SetTrialCacheState(true, checkDecoded.remainingMs or (durationMinutes * 60 * 1000), true, false)
+                pcall(UpdatePresence)
+                return true, "Trial active"
+            end
+
+            Library.TrialManager.Cached = false
+
+            return false, "Failed to claim trial"
+        end
+
+        local function CheckTrialStatus()
+            local TrialMgr = Library.TrialManager
+            if TrialMgr.Cached then
+                return TrialMgr.CachedTrialActive, TrialMgr.CachedRemainingMs, TrialMgr.CachedClaimed or false, TrialMgr.CachedExpired or false
+            end
+
+            local hwid = GetHwidForTrial()
+            if hwid == "" then
+                SetTrialCacheState(false, 0, false, false)
+                UpdateLastKnownTrialState(false, 0)
+                return false, 0, false, false
+            end
+
+            local result = RequestTrialJson("/trial/check", BuildTrialPayload(hwid))
+            if result and result.ok then
+                SetTrialCacheState(result.active or false, result.remainingMs or 0, result.claimed or false, result.expired or false)
+                pcall(UpdatePresence)
+                return result.active or false, result.remainingMs or 0, result.claimed or false, result.expired or false
+            end
+
+            return false, 0, false, false
+        end
+
+        local function UpdatePresence()
+            pcall(function()
+                local hwid = GetHwidForTrial()
+                RequestFunction({
+                    Url = Library.TrialManager.HttpUrl .. "/presence",
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["x-chat-token"] = Library.TrialManager.Token
+                    },
+                    Body = HttpService:JSONEncode({
+                        clientId = tostring(LocalPlayer.UserId),
+                        senderId = tostring(LocalPlayer.UserId),
+                        hwid = hwid ~= "" and hwid or nil,
+                        username = tostring(LocalPlayer.Name),
+                        gameName = GetTrialGameName(),
+                        placeId = tonumber(game.PlaceId) or 0
+                    })
+                })
+            end)
+        end
+
+        local function FormatTrialDurationMinutes(durationMinutes)
+            local totalMinutes = math.max(1, math.floor(tonumber(durationMinutes) or 0))
+            local days = math.floor(totalMinutes / 1440)
+            local hours = math.floor((totalMinutes % 1440) / 60)
+            local minutes = totalMinutes % 60
+            local parts = {}
+
+            if days > 0 then
+                table.insert(parts, tostring(days) .. "D")
+            end
+            if hours > 0 then
+                table.insert(parts, tostring(hours) .. "H")
+            end
+            if minutes > 0 or #parts == 0 then
+                table.insert(parts, tostring(minutes) .. "M")
+            end
+
+            return table.concat(parts, " ")
+        end
+
+        local function GetTrialDefaultMinutes()
+            local TrialMgr = Library.TrialManager
+            local cachedMinutes = tonumber(TrialMgr.CachedDefaultMinutes)
+            if cachedMinutes and cachedMinutes > 0 then
+                return math.floor(cachedMinutes)
+            end
+
+            local ok, result = pcall(function()
+                local response = RequestFunction({
+                    Url = TrialMgr.HttpUrl .. "/trial/default-hours",
+                    Method = "GET",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["x-chat-token"] = TrialMgr.Token
+                    }
+                })
+                if not response or type(response.Body) ~= "string" or response.Body == "" then
+                    return nil
+                end
+                return HttpService:JSONDecode(response.Body)
+            end)
+
+            local durationMinutes = 60
+            if ok and result and result.ok then
+                if tonumber(result.durationMinutes) then
+                    durationMinutes = math.max(1, math.floor(tonumber(result.durationMinutes)))
+                elseif tonumber(result.durationHours) then
+                    durationMinutes = math.max(1, math.floor(tonumber(result.durationHours) * 60))
+                end
+            end
+
+            TrialMgr.CachedDefaultMinutes = durationMinutes
+            return durationMinutes
+        end
+
+        local function BuildTrialPanel(panelCfg)
+            local uiRoot = gethui()
+            for _, child in ipairs(uiRoot:GetChildren()) do
+                if child.Name == "TrialGui" then
+                    child:Destroy()
+                end
+            end
+
+            local metrics = IsMobile and {
+                pw = 470,
+                ph = 255,
+                headerH = 42,
+                titleW = 185,
+                titleX = 14,
+                badgeW = 126,
+                badgeH = 22,
+                badgeX = -138,
+                badgeY = -11,
+                badgeR = 11,
+                badgeText = 10,
+                iconSize = 60,
+                iconY = 58,
+                bodyTitleSize = 20,
+                bodyTitleH = 28,
+                bodyTitleY = 112,
+                msgSize = 13,
+                msgH = 36,
+                msgY = 144,
+                sidePad = 28,
+                gap = 12,
+                btnY = 203,
+                btnH = 36,
+                btnText = 12,
+            } or {
+                pw = 540,
+                ph = 280,
+                headerH = 56,
+                titleW = 205,
+                titleX = 18,
+                badgeW = 150,
+                badgeH = 26,
+                badgeX = -165,
+                badgeY = -13,
+                badgeR = 13,
+                badgeText = 11,
+                iconSize = 82,
+                iconY = 64,
+                bodyTitleSize = 24,
+                bodyTitleH = 34,
+                bodyTitleY = 132,
+                msgSize = 14,
+                msgH = 40,
+                msgY = 168,
+                sidePad = 34,
+                gap = 14,
+                btnY = 224,
+                btnH = 40,
+                btnText = 13,
+            }
+
+            local gui = Instances:Create("ScreenGui", {
+                Parent = uiRoot,
+                Name = "TrialGui",
+                ZIndexBehavior = Enum.ZIndexBehavior.Global,
+                DisplayOrder = 999,
+                ResetOnSpawn = false
+            })
+
+            local Modal = Instances:Create("Frame", {
+                Parent = gui.Instance,
+                Name = "TrialModal",
+                AnchorPoint = Vector2New(0.5, 0.5),
+                Size = UDim2New(0, metrics.pw, 0, metrics.ph),
+                Position = UDim2New(0.5, 0, 0.5, 24),
+                BackgroundColor3 = Library.Theme["Background"],
+                BorderSizePixel = 0,
+                ClipsDescendants = true
+            })
+            Instances:Create("UICorner", { Parent = Modal.Instance, CornerRadius = UDimNew(0, 12) })
+            Instances:Create("UIStroke", { Parent = Modal.Instance, Color = Library.Theme["Border"], Thickness = 1 })
+
+            local Header = Instances:Create("Frame", {
+                Parent = Modal.Instance,
+                Size = UDim2New(1, 0, 0, metrics.headerH),
+                Position = UDim2New(0, 0, 0, 0),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0
+            })
+
+            local AccentLine = Instances:Create("Frame", {
+                Parent = Header.Instance,
+                Size = UDim2New(1, 0, 0, 2),
+                Position = UDim2New(0, 0, 1, -2),
+                BackgroundColor3 = Library.Theme["Accent"],
+                BorderSizePixel = 0
+            })
+
+            local HeaderTitle = Instances:Create("TextLabel", {
+                Parent = Header.Instance,
+                Text = "Express Hub",
+                FontFace = Library.Font,
+                TextSize = metrics.bodyTitleSize - 6,
+                TextColor3 = Library.Theme["Text"],
+                Size = UDim2New(0, metrics.titleW, 1, 0),
+                Position = UDim2New(0, metrics.titleX, 0, 0),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+
+            local BadgeFrame = Instances:Create("Frame", {
+                Parent = Header.Instance,
+                Size = UDim2New(0, metrics.badgeW, 0, metrics.badgeH),
+                Position = UDim2New(1, metrics.badgeX, 0.5, metrics.badgeY),
+                BackgroundColor3 = Color3.new(),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0
+            })
+            Instances:Create("UICorner", { Parent = BadgeFrame.Instance, CornerRadius = UDimNew(0, metrics.badgeR) })
+            Instances:Create("UIStroke", { Parent = BadgeFrame.Instance, Color = Library.Theme["Accent"], Thickness = 2 })
+            Instances:Create("TextLabel", {
+                Parent = BadgeFrame.Instance,
+                Text = panelCfg.badge or "PREMIUM REQUIRED",
+                FontFace = Library.Font,
+                TextSize = metrics.badgeText,
+                TextColor3 = Library.Theme["Accent"],
+                Size = UDim2New(1, 0, 1, 0),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Center
+            })
+
+            local Icon = Instances:Create("ImageLabel", {
+                Parent = Modal.Instance,
+                AnchorPoint = Vector2New(0.5, 0),
+                Size = UDim2New(0, metrics.iconSize, 0, metrics.iconSize),
+                Position = UDim2New(0.5, 0, 0, metrics.iconY),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                Image = "rbxassetid://107575027768011",
+                ScaleType = Enum.ScaleType.Fit,
+                ImageColor3 = Color3.new(1, 1, 1)
+            })
+
+            local BodyTitle = Instances:Create("TextLabel", {
+                Parent = Modal.Instance,
+                Text = panelCfg.title or "Premium required",
+                FontFace = Library.Font,
+                TextSize = metrics.bodyTitleSize,
+                TextColor3 = Library.Theme["Text"],
+                Size = UDim2New(1, -48, 0, metrics.bodyTitleH),
+                Position = UDim2New(0, 24, 0, metrics.bodyTitleY),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                TextXAlignment = Enum.TextXAlignment.Center
+            })
+
+            local MsgLabel = Instances:Create("TextLabel", {
+                Parent = Modal.Instance,
+                Text = panelCfg.message or "",
+                FontFace = Library.Font,
+                TextSize = metrics.msgSize,
+                TextColor3 = Library.Theme["Text"],
+                TextTransparency = 0,
+                Size = UDim2New(1, -56, 0, metrics.msgH),
+                Position = UDim2New(0, 28, 0, metrics.msgY),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                TextWrapped = true,
+                RichText = true,
+                TextXAlignment = Enum.TextXAlignment.Center,
+                TextYAlignment = Enum.TextYAlignment.Top
+            })
+
+            local btns = panelCfg.buttons or {}
+            local btnW = math.floor((metrics.pw - metrics.sidePad * 2 - metrics.gap * (#btns - 1)) / #btns)
+            local btnRowWidth = (btnW * #btns) + (metrics.gap * (#btns - 1))
+            local btnStartX = math.floor((metrics.pw - btnRowWidth) / 2)
+
+            for i, bd in ipairs(btns) do
+                local xOff = btnStartX + (i - 1) * (btnW + metrics.gap)
+                local B = Instances:Create("TextButton", {
+                    Parent = Modal.Instance,
+                    Text = bd.text,
+                    FontFace = Library.Font,
+                    TextSize = metrics.btnText,
+                    TextColor3 = bd.textColor or Library.Theme["Text"],
+                    Size = UDim2New(0, btnW, 0, metrics.btnH),
+                    Position = UDim2New(0, xOff, 0, metrics.btnY),
+                    BackgroundColor3 = bd.color or Library.Theme["Element"],
+                    BorderSizePixel = 0,
+                    AutoButtonColor = false
+                })
+                local ButtonScale = Instances:Create("UIScale", {
+                    Parent = B.Instance
+                })
+                Instances:Create("UICorner", { Parent = B.Instance, CornerRadius = UDimNew(0, 10) })
+                if bd.stroke then
+                    Instances:Create("UIStroke", { Parent = B.Instance, Color = bd.stroke, Thickness = bd.strokeThickness or 1 })
+                end
+                B.Instance.MouseEnter:Connect(function()
+                    TweenService:Create(B.Instance, TweenInfo.new(0.12, Enum.EasingStyle.Quad), { BackgroundTransparency = 0.12 }):Play()
+                    TweenService:Create(ButtonScale.Instance, TweenInfo.new(0.12, Enum.EasingStyle.Quad), { Scale = 1.03 }):Play()
+                end)
+                B.Instance.MouseLeave:Connect(function()
+                    TweenService:Create(B.Instance, TweenInfo.new(0.12, Enum.EasingStyle.Quad), { BackgroundTransparency = 0 }):Play()
+                    TweenService:Create(ButtonScale.Instance, TweenInfo.new(0.12, Enum.EasingStyle.Quad), { Scale = 1 }):Play()
+                end)
+                B.Instance.MouseButton1Click:Connect(function()
+                    if bd.callback then bd.callback() end
+                end)
+            end
+
+            Header:MakeDraggable(Modal)
+
+            return gui, Modal, MsgLabel
+        end
+
+        local function ShowTrialScreen(trialDurationMinutes, alreadyClaimed)
+            local state = { Claimed = false, Closed = false }
+            local Busy = false
+            local gui, Modal, MsgLabel
+            local formattedTrialDuration = FormatTrialDurationMinutes(trialDurationMinutes)
+
+            local trialBtnText = alreadyClaimed
+                and "Free Trial Used"
+                or ("Free Trial " .. formattedTrialDuration)
+
+            gui, Modal, MsgLabel = BuildTrialPanel({
+                badge = "PREMIUM REQUIRED",
+                title = "Premium required",
+                message = alreadyClaimed
+                    and "You've already used your free trial.\nPurchase premium to regain access."
+                    or ("Start your <b>" .. formattedTrialDuration .. "</b> free trial\nto get full access to this script."),
+                buttons = {
+                    {
+                        text = "Exit",
+                        color = FromRGB(43, 43, 55),
+                        textColor = FromRGB(241, 241, 245),
+                        callback = function()
+                            if Busy then return end
+                            Busy = true
+                            state.Closed = true
+                            gui.Instance:Destroy()
+                        end
+                    },
+                    {
+                        text = trialBtnText,
+                        color = alreadyClaimed and FromRGB(43, 43, 55) or FromRGB(43, 43, 55),
+                        textColor = alreadyClaimed and FromRGB(140, 142, 154) or FromRGB(241, 241, 245),
+                        callback = function()
+                            if Busy then return end
+                            if alreadyClaimed then
+                                MsgLabel.Instance.Text = "You've already used your free trial.\nPurchase premium to regain access."
+                                return
+                            end
+                            Busy = true
+                            MsgLabel.Instance.Text = "Contacting server..."
+                            task.spawn(function()
+                                local success = ClaimTrialWithHwid(trialDurationMinutes)
+                                if success then
+                                    state.Claimed = true
+                                    state.Closed = true
+                                    gui.Instance:Destroy()
+                                else
+                                    MsgLabel.Instance.Text = "Could not reach server.\nPlease try again."
+                                    Busy = false
+                                end
+                            end)
+                        end
+                    },
+                    {
+                        text = "Purchase Premium",
+                        color = Library.Theme["Accent"],
+                        textColor = FromRGB(255, 255, 255),
+                        callback = function()
+                            OpenPremiumInvite()
+                        end
+                    }
+                }
+            })
+
+            while not state.Closed do
+                task.wait(0.05)
+            end
+
+            return state.Claimed
+        end
+
+        local function ShowExpiredTrialScreen()
+            local state = { Closed = false }
+            local Busy = false
+            local gui, Modal, MsgLabel
+
+            gui, Modal, MsgLabel = BuildTrialPanel({
+                badge = "TRIAL EXPIRED",
+                title = "Premium required",
+                message = "Your free trial has expired.\nPurchase premium to keep using this script.",
+                buttons = {
+                    {
+                        text = "Exit",
+                        color = FromRGB(43, 43, 55),
+                        textColor = FromRGB(241, 241, 245),
+                        callback = function()
+                            if Busy then return end
+                            Busy = true
+                            state.Closed = true
+                            gui.Instance:Destroy()
+                        end
+                    },
+                    {
+                        text = "Free Trial Used",
+                        color = FromRGB(43, 43, 55),
+                        textColor = FromRGB(140, 142, 154),
+                        callback = function()
+                            MsgLabel.Instance.Text = "You've already used your free trial.\nPurchase premium to regain access."
+                        end
+                    },
+                    {
+                        text = "Purchase Premium",
+                        color = Library.Theme["Accent"],
+                        textColor = FromRGB(255, 255, 255),
+                        callback = function()
+                            OpenPremiumInvite()
+                        end
+                    }
+                }
+            })
+
+            while not state.Closed do
+                task.wait(0.05)
+            end
+        end
+
+        Library.ClaimTrialWithHwid = ClaimTrialWithHwid
+        Library.CheckTrialStatus = CheckTrialStatus
+        Library.ShowTrialModal = ShowTrialScreen
+        Library.ShowTrialExpiredModal = ShowExpiredTrialScreen
+        Library.GetTrialDefaultMinutes = GetTrialDefaultMinutes
+        Library.GetTrialDefaultHours = GetTrialDefaultMinutes
+        Library.GetHwidForTrial = GetHwidForTrial
+        Library.TriggerTrialExpiryFlow = TriggerTrialExpiryFlow
+        Library._TrialExpired = false
+        Library._TrialExpiryHandling = false
+
+        task.spawn(function()
+            pcall(GetTrialDefaultMinutes)
+        end)
+
+        task.spawn(function()
+            pcall(CheckTrialStatus)
+        end)
+
+        task.spawn(function()
+            local presenceTick = 0
+            local checkTick = 0
+            local wasActive = false
+            while Library and not Library._Unloaded do
+                task.wait(5)
+                presenceTick = presenceTick + 5
+                checkTick = checkTick + 5
+
+                if presenceTick >= 10 then
+                    presenceTick = 0
+                    pcall(UpdatePresence)
+                end
+
+                if checkTick >= 30 then
+                    checkTick = 0
+                    if wasActive then
+                        if not (Library and Library.TrialManager) then
+                            break
+                        end
+                        Library.TrialManager.Cached = false
+                        local ok, active, _, claimed = pcall(CheckTrialStatus)
+                        if ok and claimed and (not active) then
+                            TriggerTrialExpiryFlow("Your free trial has ended.")
+                            break
+                        end
+                        if ok and active then
+                            wasActive = true
+                        end
+                    else
+                        if Library and Library.TrialManager and Library.TrialManager.CachedTrialActive then
+                            wasActive = true
+                        end
+                    end
+                end
+            end
+        end)
+    end
 
     do -- Components
         Library.MakeWindow = function(self, Data)
             Data = Data or { }
+            local TrialApi = type(self) == "table" and self.ShowTrialModal and self or Library
+            local hasClaimedTrial
+            local TrialActive = false
+            local configuredTrialMinutes = tonumber(Data.TrialTimeMinutes)
+            if configuredTrialMinutes then
+                configuredTrialMinutes = math.max(1, math.floor(configuredTrialMinutes))
+            end
+            local configuredTrialTime = tonumber(Data.TrialTime)
+            if not configuredTrialMinutes and configuredTrialTime then
+                configuredTrialMinutes = math.max(1, math.floor(configuredTrialTime * 60))
+            end
+            local premiumRequiredSetting = Data.PremiumRequired
+            if premiumRequiredSetting == nil then
+                premiumRequiredSetting = Data.premiumrequired
+            end
+
+            local PremiumRequired = configuredTrialMinutes ~= nil
+            if premiumRequiredSetting ~= nil then
+                PremiumRequired = premiumRequiredSetting == true
+            end
+            local TrialTimeMinutes = configuredTrialMinutes or (TrialApi and TrialApi.GetTrialDefaultMinutes and TrialApi.GetTrialDefaultMinutes()) or 60
+
+            if PremiumRequired then
+                if not TrialApi then
+                    return nil
+                end
+
+                TrialActive, _, hasClaimedTrial = TrialApi.CheckTrialStatus()
+                if not TrialActive then
+                    local alreadyUsed = hasClaimedTrial == true
+                    local trialClaimed = TrialApi.ShowTrialModal(TrialTimeMinutes, alreadyUsed)
+                    if not trialClaimed then
+                        coroutine.yield(coroutine.running())
+                        return nil
+                    end
+                    if not TrialApi.TrialManager then
+                        return nil
+                    end
+                    TrialApi.TrialManager.Cached = false
+                    TrialActive = TrialApi.CheckTrialStatus()
+                end
+            end
 
             local Window = {
                 Name = Data.Name or Data.name or "Window",
                 CloseCallback = Data.CloseCallback or Data.closecallback or function() end,
+                PremiumRequired = PremiumRequired == true,
+                TrialActive = TrialActive == true,
 
                 Pages = { },
                 Items = { },
@@ -6376,10 +7117,7 @@ local Library do
                     Parent = Items["Playerlist"].Instance,
                     Name = "\0",
                     FontFace = Library.Font,
-                    TextColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Text = "???",
-                    AnchorPoint = Vector2New(0, 1),
                     Size = UDim2New(0, 0, 0, 12),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 75, 1, -58),
@@ -6393,13 +7131,11 @@ local Library do
                     Parent = Items["Playerlist"].Instance,
                     Name = "\0",
                     FontFace = Library.Font,
-                    TextColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
                     Text = "???",
                     AnchorPoint = Vector2New(0, 1),
                     Size = UDim2New(0, 0, 0, 12),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, 75, 1, -38),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
@@ -6412,9 +7148,8 @@ local Library do
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Text = "???",
+                    Text = "0 studs",
                     AnchorPoint = Vector2New(0, 1),
-                    Size = UDim2New(0, 0, 0, 12),
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 75, 1, -18),
                     BorderSizePixel = 0,
@@ -6424,7 +7159,7 @@ local Library do
                 })  Items["PlayerDistance"]:AddToTheme({TextColor3 = "Text"})
 
                 Items["Searchbar"] = Instances:Create("Frame", {
-                    Parent = Items["PlayersBackground"].Instance,
+                    Parent = Items["Playerlist"].Instance,
                     Name = "\0",
                     Size = UDim2New(1, -16, 0, IsMobile and 20 or 30),
                     Position = UDim2New(0, 8, 0, 8),
@@ -7443,18 +8178,18 @@ local Library do
                     FontFace = Library.Font,
                     TextColor3 = FromRGB(255, 255, 255),
                     TextTransparency = 0.4000000059604645,
+                    BorderColor3 = FromRGB(0, 0, 0),
                     Text = Toggle.Name,
                     Size = UDim2New(0, 0, 0, 15),
                     AnchorPoint = Vector2New(0, 0.5),
                     BorderSizePixel = 0,
+                    AutomaticSize = Enum.AutomaticSize.X,
                     BackgroundTransparency = 1,
                     Position = Library.ToggleSide == "Right" and UDim2New(0, 0, 0.5, 0) or UDim2New(0, 40, 0.5, 0),
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })  Items["Text"]:AddToTheme({BackgroundColor3 = "Text"})
-                
+                })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
                 Items["Text"]:Tooltip(Toggle.Tooltip)
 
                 Items["SubElements"] = Instances:Create("Frame", {
@@ -7463,7 +8198,7 @@ local Library do
                     BorderColor3 = FromRGB(0, 0, 0),
                     AnchorPoint = Vector2New(1, 0),
                     BackgroundTransparency = 1,
-                    Position = Library.ToggleSide == "Right" and UDim2New(1, -38, 0, 0) or UDim2New(1, 0, 0, 0),
+                    Position = UDim2New(1, -38, 0, 0),
                     Size = UDim2New(0, 0, 1, 0),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
@@ -10364,10 +11099,24 @@ local Library do
     end
 
     Library.CreateHomeTab = function(self, Window, DiscordLink)
+        if Window and Window.HomeTab and table.find(Window.Pages, Window.HomeTab) then
+            return Window.HomeTab
+        end
+
+        if Window and Window.Pages then
+            for _, ExistingPage in ipairs(Window.Pages) do
+                if ExistingPage and ExistingPage.Name == "Home" then
+                    Window.HomeTab = ExistingPage
+                    return ExistingPage
+                end
+            end
+        end
+
         local HomeTab = Window:MakeTab({
             Name = "Home",
             Icon = "rbxassetid://10723407389",
         })
+        Window.HomeTab = HomeTab
 
         local function AddHomeCorner(Parent, Radius)
             Instances:Create("UICorner", {
@@ -10411,7 +11160,16 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["HomeScroll"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
 
-            Items["SessionInfo"] = Instances:Create("Frame", {
+            local function CreateHomePanel(key, properties, theme, radius)
+                Items[key] = Instances:Create("Frame", properties)
+                if theme then
+                    Items[key]:AddToTheme(theme)
+                end
+                AddHomeCorner(Items[key].Instance, radius)
+                return Items[key]
+            end
+
+            CreateHomePanel("SessionInfo", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 12, 0, 24),
@@ -10419,9 +11177,7 @@ local Library do
                 Size = UDim2New(1, -24, 0, 160),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
-            })  Items["SessionInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
-
-            AddHomeCorner(Items["SessionInfo"].Instance)
+            }, {BackgroundColor3 = "Inline"})
 
             Items["SessionInfoTitle"] = Instances:Create("TextLabel", {
                 Parent = Items["HomeScroll"].Instance,
@@ -10440,7 +11196,7 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["SessionInfoTitle"]:AddToTheme({TextColor3 = "Text"})
 
-            Items["Players"] = Instances:Create("Frame", {
+            CreateHomePanel("Players", {
                 Parent = Items["SessionInfo"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 10, 0, 12),
@@ -10448,9 +11204,7 @@ local Library do
                 Size = UDim2New(0.44999998807907104, 0, 0.3499999940395355, 0),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(17, 16, 20)
-            })  Items["Players"]:AddToTheme({BackgroundColor3 = "Background"})
-
-            AddHomeCorner(Items["Players"].Instance)
+            }, {BackgroundColor3 = "Background"})
 
             Items["PlayersTitle"] = Instances:Create("TextLabel", {
                 Parent = Items["Players"].Instance,
@@ -10497,7 +11251,7 @@ local Library do
 
             Library:Connect(Players.PlayerRemoving, UpdateCurrentPlayers)
 
-            Items["MaxPlayers"] = Instances:Create("Frame", {
+            CreateHomePanel("MaxPlayers", {
                 Parent = Items["SessionInfo"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(1, 0),
@@ -10506,9 +11260,7 @@ local Library do
                 Size = UDim2New(0.5, -16, 0.3499999940395355, 0),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(17, 16, 20)
-            })  Items["MaxPlayers"]:AddToTheme({BackgroundColor3 = "Background"})
-
-            AddHomeCorner(Items["MaxPlayers"].Instance)
+            }, {BackgroundColor3 = "Background"})
 
             Items["MaxPlayersTitle"] = Instances:Create("TextLabel", {
                 Parent = Items["MaxPlayers"].Instance,
@@ -10545,7 +11297,7 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["MaxPlayersAllowed"]:AddToTheme({TextColor3 = "Text"})
 
-            Items["AccountInformation"] = Instances:Create("Frame", {
+            CreateHomePanel("AccountInformation", {
                 Parent = Items["SessionInfo"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 1),
@@ -10554,9 +11306,7 @@ local Library do
                 Size = UDim2New(1, -28, 0.44999998807907104, -20),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(17, 16, 20)
-            })  Items["AccountInformation"]:AddToTheme({BackgroundColor3 = "Background"})
-
-            AddHomeCorner(Items["AccountInformation"].Instance)
+            }, {BackgroundColor3 = "Background"})
 
             Items["AccountAvatar"] = Instances:Create("ImageLabel", {
                 Parent = Items["AccountInformation"].Instance,
@@ -10638,7 +11388,7 @@ local Library do
             })
             Items["AccountMeta"]:AddToTheme({TextColor3 = "Text"})
 
-            Items["Discord"] = Instances:Create("Frame", {
+            CreateHomePanel("Discord", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 12, 0, 200),
@@ -10646,9 +11396,7 @@ local Library do
                 Size = UDim2New(1, -24, 0, 84),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
-            })  Items["Discord"]:AddToTheme({BackgroundColor3 = "Inline"})
-
-            AddHomeCorner(Items["Discord"].Instance)
+            }, {BackgroundColor3 = "Inline"})
 
             Items["DiscordIcon"] = Instances:Create("ImageLabel", {
                 Parent = Items["Discord"].Instance,
@@ -10772,7 +11520,7 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["JoinDıscordText"]:AddToTheme({TextColor3 = "Text"})
 
-            Items["ExecutorInfo"] = Instances:Create("Frame", {
+            CreateHomePanel("ExecutorInfo", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 0),
@@ -10781,18 +11529,24 @@ local Library do
                 Size = UDim2New(1, -24, 0, 58),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
-            })  Items["ExecutorInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
+            }, {BackgroundColor3 = "Inline"})
 
-            AddHomeCorner(Items["ExecutorInfo"].Instance)
+            local function CreateHomeTextLabel(key, properties, theme)
+                Items[key] = Instances:Create("TextLabel", properties)
+                if theme then
+                    Items[key]:AddToTheme(theme)
+                end
+                return Items[key]
+            end
 
-            Items["BigExecutorText"] = Instances:Create("TextLabel", {
+            CreateHomeTextLabel("BigExecutorText", {
                 Parent = Items["ExecutorInfo"].Instance,
                 Name = "\0",
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(255, 255, 255),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = "Executor: " .. getexecutorname(),
-                Size = UDim2New(1, -24, 0, 18),
+                Size = UDim2New(1, -164, 0, 18),
                 AnchorPoint = Vector2New(0, 0),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -10801,13 +11555,13 @@ local Library do
                 BorderSizePixel = 0,
                 TextSize = 15,
                 BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
+            }, {TextColor3 = "Text"})
 
             local exec = (identifyexecutor and identifyexecutor() or getexecutorname() or ""):lower()
             local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity")
             local supportColor = unsupported and FromRGB(255, 170, 64) or FromRGB(67, 214, 117)
 
-            Items["ExecutorStatusDot"] = Instances:Create("Frame", {
+            CreateHomePanel("ExecutorStatusDot", {
                 Parent = Items["ExecutorInfo"].Instance,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 0.5),
@@ -10816,17 +11570,15 @@ local Library do
                 Size = UDim2New(0, 8, 0, 8),
                 BorderSizePixel = 0,
                 BackgroundColor3 = supportColor
-            })
+            }, nil, 8)
 
-            AddHomeCorner(Items["ExecutorStatusDot"].Instance, 8)
-
-            Items["IsSupportedText"] = Instances:Create("TextLabel", {
+            CreateHomeTextLabel("IsSupportedText", {
                 Parent = Items["ExecutorInfo"].Instance,
                 Name = "\0",
                 FontFace = Library.Font,
                 TextColor3 = supportColor,
                 Text = "Some features may not work properly.",
-                Size = UDim2New(1, -42, 0, 14),
+                Size = UDim2New(1, -178, 0, 14),
                 AnchorPoint = Vector2New(0, 0),
                 Position = UDim2New(0, 30, 0, 34),
                 BackgroundTransparency = 1,
@@ -10843,7 +11595,48 @@ local Library do
                 Items["IsSupportedText"].Instance.Text = "Fully supported executor."
             end
 
-            Items["PerformanceInfo"] = Instances:Create("Frame", {
+            CreateHomeTextLabel("TrialTimerTitle", {
+                Parent = Items["ExecutorInfo"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(255, 255, 255),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "TRIAL ENDS IN",
+                Size = UDim2New(0, 132, 0, 12),
+                AnchorPoint = Vector2New(1, 0),
+                Position = UDim2New(1, -12, 0, 10),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                BorderSizePixel = 0,
+                TextTransparency = 0.35,
+                TextSize = 11,
+                Visible = false,
+                ZIndex = 2,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            }, {TextColor3 = "Text"})
+
+            CreateHomeTextLabel("TrialTimerValue", {
+                Parent = Items["ExecutorInfo"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = Library.Theme.Accent,
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "0M",
+                Size = UDim2New(0, 132, 0, 18),
+                AnchorPoint = Vector2New(1, 0),
+                Position = UDim2New(1, -12, 0, 28),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Right,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                BorderSizePixel = 0,
+                TextSize = 16,
+                Visible = false,
+                ZIndex = 2,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            }, {TextColor3 = "Accent"})
+
+            CreateHomePanel("PerformanceInfo", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 Position = UDim2New(0, 12, 0, 400),
@@ -10851,11 +11644,9 @@ local Library do
                 Size = UDim2New(1, -24, 0, 74),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(26, 25, 31)
-            })  Items["PerformanceInfo"]:AddToTheme({BackgroundColor3 = "Inline"})
+            }, {BackgroundColor3 = "Inline"})
 
-            AddHomeCorner(Items["PerformanceInfo"].Instance)
-
-            Items["PerformanceTitle"] = Instances:Create("TextLabel", {
+            CreateHomeTextLabel("PerformanceTitle", {
                 Parent = Items["HomeScroll"].Instance,
                 Name = "\0",
                 FontFace = Library.Font,
@@ -10870,7 +11661,7 @@ local Library do
                 TextTransparency = 0.35,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["PerformanceTitle"]:AddToTheme({TextColor3 = "Text"})
+            }, {TextColor3 = "Text"})
 
             Items["HomeBottomSpacer"] = Instances:Create("Frame", {
                 Parent = Items["HomeScroll"].Instance,
@@ -10882,128 +11673,88 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
 
-            Items["FPSCard"] = Instances:Create("Frame", {
-                Parent = Items["PerformanceInfo"].Instance,
-                Name = "\0",
+            local function CreatePerformanceCard(cardKey, accentKey, valueKey, descriptionKey, options)
+                CreateHomePanel(cardKey, {
+                    Parent = Items["PerformanceInfo"].Instance,
+                    Name = "\0",
+                    AnchorPoint = options.AnchorPoint or Vector2New(0, 0),
+                    Position = options.Position,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = options.Size,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(17, 16, 20)
+                }, {BackgroundColor3 = "Background"})
+
+                Items[accentKey] = Instances:Create("Frame", {
+                    Parent = Items[cardKey].Instance,
+                    Name = "\0",
+                    Position = UDim2New(0, 8, 0, 12),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(0, 3, 0, 30),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = options.AccentColor
+                })
+                if options.AccentTheme then
+                    Items[accentKey]:AddToTheme({BackgroundColor3 = options.AccentTheme})
+                end
+
+                Instances:Create("UICorner", {
+                    Parent = Items[accentKey].Instance,
+                    Name = "\0",
+                    CornerRadius = UDimNew(1, 0)
+                })
+
+                CreateHomeTextLabel(valueKey, {
+                    Parent = Items[cardKey].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(255, 255, 255),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = options.ValueText,
+                    Size = UDim2New(1, -28, 0, 16),
+                    Position = UDim2New(0, 20, 0, 10),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    BorderSizePixel = 0,
+                    TextSize = 13,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                }, {TextColor3 = "Text"})
+
+                CreateHomeTextLabel(descriptionKey, {
+                    Parent = Items[cardKey].Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(255, 255, 255),
+                    TextTransparency = 0.45,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = options.DescriptionText,
+                    Size = UDim2New(1, -28, 0, 14),
+                    Position = UDim2New(0, 20, 0, 28),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                }, {TextColor3 = "Text"})
+            end
+
+            CreatePerformanceCard("FPSCard", "FPSAccent", "FPSValue", "FPSDescription", {
                 Position = UDim2New(0, 8, 0, 9),
-                BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(0.5, -10, 0, 56),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(17, 16, 20)
-            })  Items["FPSCard"]:AddToTheme({BackgroundColor3 = "Background"})
-
-            AddHomeCorner(Items["FPSCard"].Instance)
-
-            Items["FPSAccent"] = Instances:Create("Frame", {
-                Parent = Items["FPSCard"].Instance,
-                Name = "\0",
-                Position = UDim2New(0, 8, 0, 12),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(0, 3, 0, 30),
-                BorderSizePixel = 0,
-                BackgroundColor3 = Library.Theme.Accent
-            })  Items["FPSAccent"]:AddToTheme({BackgroundColor3 = "Accent"})
-
-            Instances:Create("UICorner", {
-                Parent = Items["FPSAccent"].Instance,
-                Name = "\0",
-                CornerRadius = UDimNew(1, 0)
+                AccentColor = Library.Theme.Accent,
+                AccentTheme = "Accent",
+                ValueText = "FPS: 0",
+                DescriptionText = "frames per second"
             })
 
-            Items["FPSValue"] = Instances:Create("TextLabel", {
-                Parent = Items["FPSCard"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(255, 255, 255),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = "FPS: 0",
-                Size = UDim2New(1, -28, 0, 16),
-                Position = UDim2New(0, 20, 0, 10),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BorderSizePixel = 0,
-                TextSize = 13,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["FPSValue"]:AddToTheme({TextColor3 = "Text"})
-
-            Items["FPSDescription"] = Instances:Create("TextLabel", {
-                Parent = Items["FPSCard"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(255, 255, 255),
-                TextTransparency = 0.45,
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = "frames per second",
-                Size = UDim2New(1, -28, 0, 14),
-                Position = UDim2New(0, 20, 0, 28),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BorderSizePixel = 0,
-                TextSize = 12,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["FPSDescription"]:AddToTheme({TextColor3 = "Text"})
-
-            Items["PingCard"] = Instances:Create("Frame", {
-                Parent = Items["PerformanceInfo"].Instance,
-                Name = "\0",
+            CreatePerformanceCard("PingCard", "PingAccent", "PingValue", "PingDescription", {
                 AnchorPoint = Vector2New(1, 0),
                 Position = UDim2New(1, -8, 0, 9),
-                BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(0.5, -10, 0, 56),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(17, 16, 20)
-            })  Items["PingCard"]:AddToTheme({BackgroundColor3 = "Background"})
-
-            AddHomeCorner(Items["PingCard"].Instance)
-
-            Items["PingAccent"] = Instances:Create("Frame", {
-                Parent = Items["PingCard"].Instance,
-                Name = "\0",
-                Position = UDim2New(0, 8, 0, 12),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(0, 3, 0, 30),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(88, 113, 255)
+                AccentColor = FromRGB(88, 113, 255),
+                ValueText = "Ping: 0 ms",
+                DescriptionText = "network latency"
             })
-
-            Instances:Create("UICorner", {
-                Parent = Items["PingAccent"].Instance,
-                Name = "\0",
-                CornerRadius = UDimNew(1, 0)
-            })
-
-            Items["PingValue"] = Instances:Create("TextLabel", {
-                Parent = Items["PingCard"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(255, 255, 255),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = "Ping: 0 ms",
-                Size = UDim2New(1, -28, 0, 16),
-                Position = UDim2New(0, 20, 0, 10),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BorderSizePixel = 0,
-                TextSize = 13,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["PingValue"]:AddToTheme({TextColor3 = "Text"})
-
-            Items["PingDescription"] = Instances:Create("TextLabel", {
-                Parent = Items["PingCard"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(255, 255, 255),
-                TextTransparency = 0.45,
-                BorderColor3 = FromRGB(0, 0, 0),
-                Text = "network latency",
-                Size = UDim2New(1, -28, 0, 14),
-                Position = UDim2New(0, 20, 0, 28),
-                BackgroundTransparency = 1,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                BorderSizePixel = 0,
-                TextSize = 12,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["PingDescription"]:AddToTheme({TextColor3 = "Text"})
 
             local function UpdatePerformanceLayout()
                 local ShowFPS = Library.ExpressExtraSettings and Library.ExpressExtraSettings.ShowFPS == true
@@ -11025,6 +11776,122 @@ local Library do
                     Items["PingCard"].Instance.Size = UDim2New(1, -16, 0, 56)
                     Items["PingCard"].Instance.Position = UDim2New(1, -8, 0, 9)
                 end
+            end
+
+            local function FormatTrialRemaining(remainingMs)
+                local totalMs = math.max(0, MathFloor(tonumber(remainingMs) or 0))
+                local totalMinutes = MathFloor(totalMs / 60000)
+                local days = math.floor(totalMinutes / 1440)
+                local hours = math.floor((totalMinutes % 1440) / 60)
+                local minutes = totalMinutes % 60
+                local seconds = MathFloor((totalMs % 60000) / 1000)
+                local parts = {}
+
+                if days > 0 then
+                    TableInsert(parts, tostring(days) .. "D")
+                end
+                if hours > 0 then
+                    TableInsert(parts, tostring(hours) .. "H")
+                end
+                if minutes > 0 or #parts > 0 then
+                    TableInsert(parts, tostring(minutes) .. "M")
+                end
+                if #parts == 0 then
+                    TableInsert(parts, tostring(seconds) .. "S")
+                end
+
+                return table.concat(parts, " ")
+            end
+
+            local TrialCountdownRemainingMs = 0
+            local TrialCountdownSyncedAt = 0
+            local TrialCountdownRefreshAt = 0
+
+            local function ResolveTrialRemainingFromSnapshot(remainingMs, syncedAt)
+                return math.max(0, (tonumber(remainingMs) or 0) - math.max(0, (tick() - (tonumber(syncedAt) or tick())) * 1000))
+            end
+
+            local function ResolveTrialCountdownRemaining()
+                local TrialMgr = Library.TrialManager
+                if not TrialMgr then
+                    return 0
+                end
+
+                local syncedAt = tonumber(TrialMgr.LastKnownSyncedAt) or 0
+                if TrialMgr.CachedTrialActive and tonumber(TrialMgr.CachedRemainingMs) and tonumber(TrialMgr.CachedRemainingMs) > 0 then
+                    return ResolveTrialRemainingFromSnapshot(TrialMgr.CachedRemainingMs, syncedAt)
+                end
+
+                if TrialMgr.LastKnownTrialActive and tonumber(TrialMgr.LastKnownRemainingMs) and tonumber(TrialMgr.LastKnownRemainingMs) > 0 then
+                    return ResolveTrialRemainingFromSnapshot(TrialMgr.LastKnownRemainingMs, syncedAt)
+                end
+
+                return 0
+            end
+
+            local function SyncTrialCountdown()
+                TrialCountdownRemainingMs = ResolveTrialCountdownRemaining()
+                TrialCountdownSyncedAt = TrialCountdownRemainingMs > 0 and tick() or 0
+                Window.TrialActive = TrialCountdownRemainingMs > 0
+                return Window.TrialActive, TrialCountdownRemainingMs
+            end
+
+            local function RefreshTrialCountdown()
+                if not Library.CheckTrialStatus then
+                    Window.TrialActive = false
+                    TrialCountdownRemainingMs = 0
+                    TrialCountdownSyncedAt = 0
+                    TrialCountdownRefreshAt = 0
+                    return false, 0
+                end
+
+                local TrialMgr = Library.TrialManager
+                if TrialMgr then
+                    TrialMgr.Cached = false
+                end
+                pcall(Library.CheckTrialStatus)
+
+                local cachedActive, cachedRemainingMs = SyncTrialCountdown()
+
+                TrialCountdownRefreshAt = tick()
+                return cachedActive, cachedRemainingMs
+            end
+
+            local function UpdateTrialCountdownDisplay(forceRefresh)
+                local TrialVisible = Window.PremiumRequired == true
+                local TrialText = nil
+
+                if not TrialVisible then
+                    Window.TrialActive = false
+                    Items["TrialTimerTitle"].Instance.Visible = false
+                    Items["TrialTimerValue"].Instance.Visible = false
+                    return false, nil
+                end
+
+                if TrialVisible then
+                    if forceRefresh or TrialCountdownRefreshAt <= 0 or (tick() - TrialCountdownRefreshAt) >= 5 then
+                        local Active = RefreshTrialCountdown()
+                        TrialVisible = Active == true
+                    elseif TrialCountdownSyncedAt <= 0 then
+                        local Active = SyncTrialCountdown()
+                        TrialVisible = Active == true
+                    end
+
+                    local RemainingMs = math.max(0, TrialCountdownRemainingMs - math.max(0, (tick() - TrialCountdownSyncedAt) * 1000))
+                    if RemainingMs > 0 then
+                        TrialText = FormatTrialRemaining(RemainingMs)
+                    else
+                        TrialVisible = false
+                    end
+                end
+
+                Items["TrialTimerTitle"].Instance.Visible = TrialVisible
+                Items["TrialTimerValue"].Instance.Visible = TrialVisible
+                if TrialVisible and TrialText then
+                    Items["TrialTimerValue"].Instance.Text = TrialText
+                end
+
+                return TrialVisible, TrialText
             end
 
             local function UpdateHomeLayout()
@@ -11097,7 +11964,15 @@ local Library do
                 end
             end)
 
+            task.spawn(function()
+                while Library and Items["ExecutorInfo"] and Items["ExecutorInfo"].Instance and Items["ExecutorInfo"].Instance.Parent do
+                    UpdateTrialCountdownDisplay(false)
+                    task.wait(0.2)
+                end
+            end)
+
             Library:Connect(Items["HomeScroll"].Instance:GetPropertyChangedSignal("AbsoluteSize"), UpdateHomeLayout)
+            UpdateTrialCountdownDisplay(true)
             UpdateHomeLayout()
             UpdatePerformanceLayout()
         end
