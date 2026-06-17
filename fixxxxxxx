@@ -131,7 +131,7 @@ local Library do
             MessageLimit = 50,
             PresenceInterval = 5,
             RetryDelay = 5,
-            AutoConnect = true,
+            AutoConnect = false,
             AutoCreate = true,
             TabName = "Global Chat",
             SubTabName = "Chat",
@@ -3940,10 +3940,8 @@ local Library do
 
         local GC = self.GlobalChat
         local Connected = false
-        local Connecting = false
         local Socket = nil
         local PingThread = nil
-        local RetryThread = nil
         local Destroyed = false
         local MessageConnection = nil
         local CloseConnection = nil
@@ -3972,8 +3970,6 @@ local Library do
             }
             return Base .. "?" .. TableConcat(Params, "&")
         end
-
-        local ScheduleReconnect
 
         local function HandlePacket(Packet)
             local PacketType = Packet.type
@@ -4648,15 +4644,7 @@ local Library do
         end
 
         local function Connect()
-            if Destroyed or Connected or Connecting then return end
-            Connecting = true
-
-            if RetryThread then
-                pcall(function()
-                    task.cancel(RetryThread)
-                end)
-                RetryThread = nil
-            end
+            if Destroyed then return end
 
             pcall(function()
                 if Socket then
@@ -4669,13 +4657,11 @@ local Library do
                 return WebSocketFunction(BuildWsUrl())
             end)
             if not Success or not Ws then
-                Connecting = false
-                ScheduleReconnect()
+                task.delay(GC.RetryDelay, Connect)
                 return
             end
             Socket = Ws
             Connected = true
-            Connecting = false
             if PingThread then
                 pcall(function()
                     task.cancel(PingThread)
@@ -4716,30 +4702,13 @@ local Library do
                 Connected = false
                 Socket = nil
                 if not Destroyed then
-                    ScheduleReconnect()
+                    task.delay(GC.RetryDelay, Connect)
                 end
             end, Socket)
         end
-
-        ScheduleReconnect = function()
-            if Destroyed or Connected or Connecting or RetryThread then
-                return
-            end
-
-            RetryThread = task.delay(GC.RetryDelay, function()
-                RetryThread = nil
-                Connect()
-            end)
-        end
-
         TableInsert(self.CleanupCallbacks, function()
             Destroyed = true
-            Connecting = false
             Connected = false
-            if RetryThread then
-                pcall(function() task.cancel(RetryThread) end)
-                RetryThread = nil
-            end
             if PingThread then
                 pcall(function() task.cancel(PingThread) end)
             end
