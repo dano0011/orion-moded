@@ -7552,7 +7552,7 @@ local Library do
                         end)
                     end)
 
-                    WarnIcon.Instance.MouseLeave:Connect(function()
+                    WarnHitbox.MouseLeave:Connect(function()
                         HideWarnTooltip()
                     end)
                 end
