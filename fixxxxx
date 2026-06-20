@@ -7455,27 +7455,26 @@ local Library do
                 })  Items["Text"]:AddToTheme({BackgroundColor3 = "Text"})
 
                 if Toggle.Warning then
+                    Items["Text"].Instance.Text = Toggle.Name .. " ⚠️"
                     Items["Text"].Instance.TextColor3 = FromRGB(255, 200, 0)
 
-                    local WarnIcon = Instances:Create("TextLabel", {
-                        Parent = Items["Toggle"].Instance, Name = "\0",
-                        FontFace = Library.Font, Text = " ⚠️",
-                        TextColor3 = FromRGB(255, 200, 0), TextSize = 14,
-                        Size = UDim2New(0, 20, 0, 15), AnchorPoint = Vector2New(0, 0.5),
-                        Position = UDim2New(0, 0, 0.5, 0),
-                        BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 2,
-                        BackgroundColor3 = FromRGB(255, 255, 255)
-                    })
+                    local WarnHitbox = InstanceNew("TextButton")
+                    WarnHitbox.Name = "\0"
+                    WarnHitbox.Text = ""
+                    WarnHitbox.BackgroundTransparency = 1
+                    WarnHitbox.BorderSizePixel = 0
+                    WarnHitbox.Size = UDim2New(0, 22, 1, 0)
+                    WarnHitbox.AnchorPoint = Vector2New(1, 0)
+                    WarnHitbox.Position = UDim2New(0, 0, 0, 0)
+                    WarnHitbox.ZIndex = 5
+                    WarnHitbox.AutoButtonColor = false
+                    WarnHitbox.Parent = Items["Text"].Instance
 
-                    local function UpdateIconPos()
-                        local t = Items["Text"].Instance
-                        local toggle = Items["Toggle"].Instance
-                        WarnIcon.Instance.Position = UDim2New(0, t.AbsolutePosition.X - toggle.AbsolutePosition.X + t.AbsoluteSize.X, 0.5, -7)
+                    local function UpdateHitboxPos()
+                        WarnHitbox.Position = UDim2New(1, 0, 0, 0)
                     end
-
-                    Items["Text"].Instance:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateIconPos)
-                    Items["Text"].Instance:GetPropertyChangedSignal("AbsolutePosition"):Connect(UpdateIconPos)
-                    UpdateIconPos()
+                    Items["Text"].Instance:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateHitboxPos)
+                    UpdateHitboxPos()
 
                     local WarnTooltip = Instances:Create("Frame", {
                         Parent = Library.Holder.Instance, Name = "\0",
@@ -7530,7 +7529,7 @@ local Library do
                         if InputChangedConn then InputChangedConn:Disconnect() InputChangedConn = nil end
                     end
 
-                    WarnIcon.Instance.MouseEnter:Connect(function()
+                    WarnHitbox.MouseEnter:Connect(function()
                         if Library.HideTooltips then return end
                         UpdateWarnPos()
                         WarnTooltip:Tween(nil, {BackgroundTransparency = 0})
