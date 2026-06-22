@@ -1777,7 +1777,8 @@ local function createGlobalChat(window)
 	local gcActive = Instance.new("TextLabel", overlay)
 	gcActive.AnchorPoint = Vector2.new(1, 0)
 	gcActive.Position = UDim2.new(1, -12, 0, 14)
-	gcActive.Size = UDim2.new(0, 100, 0, 22)
+	gcActive.AutomaticSize = Enum.AutomaticSize.X
+	gcActive.Size = UDim2.new(0, 0, 0, 22)
 	gcActive.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 	gcActive.BorderSizePixel = 0
 	gcActive.ZIndex = 11
@@ -1785,6 +1786,9 @@ local function createGlobalChat(window)
 	gcActive.Text = "0 online"
 	gcActive.TextColor3 = Color3.fromRGB(60, 220, 100)
 	gcActive.TextSize = 12
+	local gcActivePad = Instance.new("UIPadding", gcActive)
+	gcActivePad.PaddingLeft = UDim.new(0, 12)
+	gcActivePad.PaddingRight = UDim.new(0, 12)
 	Instance.new("UICorner", gcActive).CornerRadius = UDim.new(1, 0)
 
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
@@ -1903,14 +1907,14 @@ local function createGlobalChat(window)
 		gcMsgBox.PlaceholderText = msg; gcMsgBox.Text = ""
 		task.delay(2, function()
 			TweenService:Create(gcIStroke, TweenInfo.new(0.3), {Color=Color3.fromRGB(60,220,100)}):Play()
-			gcMsgBox.PlaceholderText = "Message everyone..."
+			gcMsgBox.PlaceholderText = "Send a message here..."
 		end)
 	end
 
 	local gcLastSend = 0; local gcCooldown = false
 	local function gcUpdateCooldown()
 		if gcCooldown then return end
-		local timeLeft = 5 - (tick() - gcLastSend)
+		local timeLeft = 1 - (tick() - gcLastSend)
 		if timeLeft > 0 then
 			gcCooldown = true
 			gcSendBtn.Text = math.ceil(timeLeft)
@@ -1918,7 +1922,7 @@ local function createGlobalChat(window)
 			gcSendBtn.TextColor3 = Color3.fromRGB(150,150,150)
 			task.spawn(function()
 				while timeLeft > 0 do
-					task.wait(0.1); timeLeft = 5 - (tick() - gcLastSend)
+					task.wait(0.1); timeLeft = 1 - (tick() - gcLastSend)
 					if timeLeft > 0 then gcSendBtn.Text = math.ceil(timeLeft); gcSendIcon.Visible = false end
 				end
 						gcSendBtn.Text = ""
