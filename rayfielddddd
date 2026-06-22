@@ -1741,17 +1741,28 @@ local function createGlobalChat(window)
 	local gcPage = Elements:FindFirstChild("Global Chat")
 	if not gcPage then return end
 
-	local ll = gcPage:FindFirstChildOfClass("UIListLayout")
-	if ll then ll.Enabled = false end
-	local up = gcPage:FindFirstChildOfClass("UIPadding")
-	if up then up:Destroy() end
+	local overlay = Instance.new("Frame", Main)
+	overlay.BackgroundColor3 = SelectedTheme.Background
+	overlay.BorderSizePixel = 0
+	overlay.ClipsDescendants = true
+	overlay.ZIndex = 5
+	overlay.Visible = false
 
-	local container = Instance.new("Frame", gcPage)
-	container.Size = UDim2.new(1,0,1,0)
-	container.BackgroundTransparency = 1
-	container.ClipsDescendants = true
+	task.spawn(function()
+		repeat task.wait() until Elements.AbsoluteSize.Y > 10
+		local function syncOverlay()
+			overlay.Position = UDim2.new(0, Elements.AbsolutePosition.X - Main.AbsolutePosition.X, 0, Elements.AbsolutePosition.Y - Main.AbsolutePosition.Y)
+			overlay.Size = UDim2.new(0, Elements.AbsoluteSize.X, 0, Elements.AbsoluteSize.Y)
+		end
+		syncOverlay()
+		Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncOverlay)
+	end)
 
-	local gcScroll = Instance.new("ScrollingFrame", container)
+	Elements.UIPageLayout:GetPropertyChangedSignal("CurrentPage"):Connect(function()
+		overlay.Visible = Elements.UIPageLayout.CurrentPage == gcPage
+	end)
+
+	local gcScroll = Instance.new("ScrollingFrame", overlay)
 	gcScroll.Size = UDim2.new(1,0,1,-46)
 	gcScroll.BackgroundTransparency = 1
 	gcScroll.BorderSizePixel = 0
@@ -1765,7 +1776,7 @@ local function createGlobalChat(window)
 	gcPad.PaddingTop = UDim.new(0,6); gcPad.PaddingBottom = UDim.new(0,6)
 	gcPad.PaddingLeft = UDim.new(0,8); gcPad.PaddingRight = UDim.new(0,8)
 
-	local gcInputBg = Instance.new("Frame", container)
+	local gcInputBg = Instance.new("Frame", overlay)
 	gcInputBg.Size = UDim2.new(1,-46,0,34)
 	gcInputBg.Position = UDim2.new(0,0,1,-40)
 	gcInputBg.BackgroundColor3 = Color3.fromRGB(18,18,18)
@@ -1783,7 +1794,7 @@ local function createGlobalChat(window)
 	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(80,140,255)}):Play() end)
 	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(40,40,40)}):Play() end)
 
-	local gcSendBtn = Instance.new("TextButton", container)
+	local gcSendBtn = Instance.new("TextButton", overlay)
 	gcSendBtn.Size = UDim2.new(0,38,0,34); gcSendBtn.Position = UDim2.new(1,-42,1,-40)
 	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "→"
 	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 18
@@ -1870,7 +1881,7 @@ local function createGlobalChat(window)
 	end)
 
 	task.spawn(function()
-		while gcPage.Parent do
+		while overlay.Parent do
 			task.wait(2)
 			local ok, msgs = pcall(function() return HttpService:JSONDecode(gcHttpGet(DKGC_BASE.."/chat/messages?limit=50")) end)
 			if ok and type(msgs) == "table" then
