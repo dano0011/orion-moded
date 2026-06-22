@@ -1745,22 +1745,34 @@ local function createGlobalChat(window)
 	overlay.BackgroundColor3 = SelectedTheme.Background
 	overlay.BorderSizePixel = 0
 	overlay.ClipsDescendants = true
-	overlay.ZIndex = 5
+	overlay.ZIndex = 10
 	overlay.Visible = false
 
-	task.spawn(function()
-		repeat task.wait() until Elements.AbsoluteSize.Y > 10
-		local function syncOverlay()
+	local function syncOverlay()
+		if Elements.AbsoluteSize.Y > 10 then
 			overlay.Position = UDim2.new(0, Elements.AbsolutePosition.X - Main.AbsolutePosition.X, 0, Elements.AbsolutePosition.Y - Main.AbsolutePosition.Y)
 			overlay.Size = UDim2.new(0, Elements.AbsoluteSize.X, 0, Elements.AbsoluteSize.Y)
 		end
+	end
+	task.spawn(function()
+		repeat task.wait() until Elements.AbsoluteSize.Y > 10
 		syncOverlay()
 		Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncOverlay)
 	end)
 
-	Elements.UIPageLayout:GetPropertyChangedSignal("CurrentPage"):Connect(function()
-		overlay.Visible = Elements.UIPageLayout.CurrentPage == gcPage
-	end)
+	local function connectHideBtn(btn)
+		if btn.ClassName == "Frame" and btn.Name ~= "Global Chat" and btn.Name ~= "Template" and btn.Name ~= "Placeholder" then
+			local interact = btn:FindFirstChild("Interact")
+			if interact then interact.MouseButton1Click:Connect(function() overlay.Visible = false end) end
+		end
+	end
+	for _, btn in ipairs(TabList:GetChildren()) do connectHideBtn(btn) end
+	TabList.ChildAdded:Connect(connectHideBtn)
+
+	local gcBtn = TabList["Global Chat"]
+	if gcBtn and gcBtn:FindFirstChild("Interact") then
+		gcBtn.Interact.MouseButton1Click:Connect(function() overlay.Visible = true end)
+	end
 
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
 	gcScroll.Size = UDim2.new(1,0,1,-46)
