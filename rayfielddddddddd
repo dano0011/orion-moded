@@ -1776,8 +1776,8 @@ local function createGlobalChat(window)
 	gcShellStroke.Thickness = 1
 	local gcActive = Instance.new("TextLabel", overlay)
 	gcActive.AnchorPoint = Vector2.new(1, 0)
-	gcActive.Position = UDim2.new(1, -10, 0, 10)
-	gcActive.Size = UDim2.new(0, 110, 0, 24)
+	gcActive.Position = UDim2.new(1, -12, 0, 14)
+	gcActive.Size = UDim2.new(0, 100, 0, 22)
 	gcActive.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 	gcActive.BorderSizePixel = 0
 	gcActive.ZIndex = 11
@@ -1788,8 +1788,8 @@ local function createGlobalChat(window)
 	Instance.new("UICorner", gcActive).CornerRadius = UDim.new(1, 0)
 
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
-	gcScroll.Size = UDim2.new(1, -12, 1, -86)
-	gcScroll.Position = UDim2.new(0, 6, 0, 36)
+	gcScroll.Size = UDim2.new(1, -12, 1, -92)
+	gcScroll.Position = UDim2.new(0, 6, 0, 42)
 	gcScroll.BackgroundTransparency = 1
 	gcScroll.BorderSizePixel = 0
 	gcScroll.ScrollBarThickness = 4
@@ -1804,14 +1804,14 @@ local function createGlobalChat(window)
 	gcPad.PaddingLeft = UDim.new(0,8); gcPad.PaddingRight = UDim.new(0,8)
 
 	local gcInputBg = Instance.new("Frame", overlay)
-	gcInputBg.Size = UDim2.new(1,-68,0,36)
-	gcInputBg.Position = UDim2.new(0,6,1,-42)
+	gcInputBg.Size = UDim2.new(1,-66,0,38)
+	gcInputBg.Position = UDim2.new(0,6,1,-44)
 	gcInputBg.BackgroundColor3 = Color3.fromRGB(18,18,18)
 	gcInputBg.BorderSizePixel = 0
 	gcInputBg.ZIndex = 11
 	Instance.new("UICorner", gcInputBg).CornerRadius = UDim.new(0,10)
 	local gcIStroke = Instance.new("UIStroke", gcInputBg)
-	gcIStroke.Color = Color3.fromRGB(40,40,40); gcIStroke.Thickness = 1
+	gcIStroke.Color = Color3.fromRGB(60,220,100); gcIStroke.Thickness = 1
 
 	local gcMsgBox = Instance.new("TextBox", gcInputBg)
 	gcMsgBox.Size = UDim2.new(1,-16,1,0); gcMsgBox.Position = UDim2.new(0,10,0,0)
@@ -1821,13 +1821,13 @@ local function createGlobalChat(window)
 	gcMsgBox.Font = Enum.Font.Gotham; gcMsgBox.TextXAlignment = Enum.TextXAlignment.Left
 	gcMsgBox.ClearTextOnFocus = false
 	gcMsgBox.ZIndex = 12
-	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(80,140,255)}):Play() end)
-	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(40,40,40)}):Play() end)
+	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(90,235,120)}):Play() end)
+	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(60,220,100)}):Play() end)
 
 	local gcArrow, gcArrowOffset, gcArrowSize = resolveIcon("arrow-right")
 	local gcSendBtn = Instance.new("TextButton", overlay)
-	gcSendBtn.Size = UDim2.new(0,56,0,36); gcSendBtn.Position = UDim2.new(1,-62,1,-42)
-	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = ""
+	gcSendBtn.Size = UDim2.new(0,44,0,38); gcSendBtn.Position = UDim2.new(1,-50,1,-44)
+	gcSendBtn.BackgroundColor3 = Color3.fromRGB(60,220,100); gcSendBtn.Text = ""
 	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 13
 	gcSendBtn.Font = Enum.Font.GothamBold
 	gcSendBtn.BorderSizePixel = 0
@@ -1843,8 +1843,8 @@ local function createGlobalChat(window)
 	gcSendIcon.ZIndex = 12
 	if gcArrowOffset then gcSendIcon.ImageRectOffset = gcArrowOffset end
 	if gcArrowSize then gcSendIcon.ImageRectSize = gcArrowSize end
-	gcSendBtn.MouseEnter:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(100,160,255)}):Play() end)
-	gcSendBtn.MouseLeave:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(80,140,255)}):Play() end)
+	gcSendBtn.MouseEnter:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(90,235,120)}):Play() end)
+	gcSendBtn.MouseLeave:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(60,220,100)}):Play() end)
 
 	local gcLocalPlayer = Players.LocalPlayer
 	local gcMsgOrder = 0
@@ -1902,7 +1902,7 @@ local function createGlobalChat(window)
 		TweenService:Create(gcIStroke, TweenInfo.new(0.1), {Color=Color3.fromRGB(220,60,60)}):Play()
 		gcMsgBox.PlaceholderText = msg; gcMsgBox.Text = ""
 		task.delay(2, function()
-			TweenService:Create(gcIStroke, TweenInfo.new(0.3), {Color=Color3.fromRGB(40,40,40)}):Play()
+			TweenService:Create(gcIStroke, TweenInfo.new(0.3), {Color=Color3.fromRGB(60,220,100)}):Play()
 			gcMsgBox.PlaceholderText = "Message everyone..."
 		end)
 	end
@@ -1923,7 +1923,7 @@ local function createGlobalChat(window)
 				end
 						gcSendBtn.Text = ""
 						gcSendIcon.Visible = true
-				gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255)
+					gcSendBtn.BackgroundColor3 = Color3.fromRGB(60,220,100)
 				gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255)
 				gcCooldown = false
 			end)
