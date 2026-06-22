@@ -1734,7 +1734,7 @@ local function gcHasLink(s)
 end
 
 local function createGlobalChat(window)
-	window:CreateTab("Global Chat", 0, true)
+	window:CreateTab("Global Chat", 10734888000, true)
 	if TabList["Global Chat"] then TabList["Global Chat"].Visible = true; TabList["Global Chat"].LayoutOrder = 999 end
 	if Elements["Global Chat"] then Elements["Global Chat"].LayoutOrder = 999 end
 
@@ -1779,7 +1779,7 @@ local function createGlobalChat(window)
 	gcActive.Position = UDim2.new(1, -12, 0, 14)
 	gcActive.AutomaticSize = Enum.AutomaticSize.X
 	gcActive.Size = UDim2.new(0, 0, 0, 22)
-	gcActive.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+	gcActive.BackgroundTransparency = 1
 	gcActive.BorderSizePixel = 0
 	gcActive.ZIndex = 11
 	gcActive.Font = Enum.Font.GothamMedium
@@ -1787,9 +1787,7 @@ local function createGlobalChat(window)
 	gcActive.TextColor3 = Color3.fromRGB(60, 220, 100)
 	gcActive.TextSize = 12
 	local gcActivePad = Instance.new("UIPadding", gcActive)
-	gcActivePad.PaddingLeft = UDim.new(0, 12)
-	gcActivePad.PaddingRight = UDim.new(0, 12)
-	Instance.new("UICorner", gcActive).CornerRadius = UDim.new(1, 0)
+	gcActivePad.PaddingLeft = UDim.new(0, 2)
 
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
 	gcScroll.Size = UDim2.new(1, -12, 1, -92)
@@ -1819,7 +1817,7 @@ local function createGlobalChat(window)
 
 	local gcMsgBox = Instance.new("TextBox", gcInputBg)
 	gcMsgBox.Size = UDim2.new(1,-16,1,0); gcMsgBox.Position = UDim2.new(0,10,0,0)
-	gcMsgBox.BackgroundTransparency = 1; gcMsgBox.PlaceholderText = "Message everyone..."
+	gcMsgBox.BackgroundTransparency = 1; gcMsgBox.PlaceholderText = "Send a message here..."
 	gcMsgBox.PlaceholderColor3 = Color3.fromRGB(90,90,90); gcMsgBox.Text = ""
 	gcMsgBox.TextColor3 = Color3.fromRGB(235,235,235); gcMsgBox.TextSize = 13
 	gcMsgBox.Font = Enum.Font.Gotham; gcMsgBox.TextXAlignment = Enum.TextXAlignment.Left
