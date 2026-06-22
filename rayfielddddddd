@@ -1742,23 +1742,14 @@ local function createGlobalChat(window)
 	if not gcPage then return end
 
 	local overlay = Instance.new("Frame", Main)
-	overlay.BackgroundColor3 = SelectedTheme.Background
+	overlay.Name = "GlobalChatOverlay"
+	overlay.Position = useMobileSizing and UDim2.new(0, 12, 0, 78) or UDim2.new(0, 16, 0, 82)
+	overlay.Size = useMobileSizing and UDim2.new(1, -24, 1, -90) or UDim2.new(1, -32, 1, -98)
+	overlay.BackgroundTransparency = 1
 	overlay.BorderSizePixel = 0
 	overlay.ClipsDescendants = true
 	overlay.ZIndex = 10
 	overlay.Visible = false
-
-	local function syncOverlay()
-		if Elements.AbsoluteSize.Y > 10 then
-			overlay.Position = UDim2.new(0, Elements.AbsolutePosition.X - Main.AbsolutePosition.X, 0, Elements.AbsolutePosition.Y - Main.AbsolutePosition.Y)
-			overlay.Size = UDim2.new(0, Elements.AbsoluteSize.X, 0, Elements.AbsoluteSize.Y)
-		end
-	end
-	task.spawn(function()
-		repeat task.wait() until Elements.AbsoluteSize.Y > 10
-		syncOverlay()
-		Main:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncOverlay)
-	end)
 
 	local function connectHideBtn(btn)
 		if btn.ClassName == "Frame" and btn.Name ~= "Global Chat" and btn.Name ~= "Template" and btn.Name ~= "Placeholder" then
@@ -1774,14 +1765,26 @@ local function createGlobalChat(window)
 		gcBtn.Interact.MouseButton1Click:Connect(function() overlay.Visible = true end)
 	end
 
+	local gcShell = Instance.new("Frame", overlay)
+	gcShell.Size = UDim2.new(1, 0, 1, 0)
+	gcShell.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+	gcShell.BorderSizePixel = 0
+	gcShell.ZIndex = 10
+	Instance.new("UICorner", gcShell).CornerRadius = UDim.new(0, 10)
+	local gcShellStroke = Instance.new("UIStroke", gcShell)
+	gcShellStroke.Color = Color3.fromRGB(34, 34, 34)
+	gcShellStroke.Thickness = 1
+
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
-	gcScroll.Size = UDim2.new(1,0,1,-46)
+	gcScroll.Size = UDim2.new(1, -12, 1, -56)
+	gcScroll.Position = UDim2.new(0, 6, 0, 6)
 	gcScroll.BackgroundTransparency = 1
 	gcScroll.BorderSizePixel = 0
 	gcScroll.ScrollBarThickness = 4
 	gcScroll.ScrollBarImageColor3 = Color3.fromRGB(60,60,60)
 	gcScroll.CanvasSize = UDim2.new(0,0,0,0)
 	gcScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	gcScroll.ZIndex = 11
 	local gcLL = Instance.new("UIListLayout", gcScroll)
 	gcLL.Padding = UDim.new(0,6); gcLL.SortOrder = Enum.SortOrder.LayoutOrder
 	local gcPad = Instance.new("UIPadding", gcScroll)
@@ -1789,9 +1792,11 @@ local function createGlobalChat(window)
 	gcPad.PaddingLeft = UDim.new(0,8); gcPad.PaddingRight = UDim.new(0,8)
 
 	local gcInputBg = Instance.new("Frame", overlay)
-	gcInputBg.Size = UDim2.new(1,-46,0,34)
-	gcInputBg.Position = UDim2.new(0,0,1,-40)
+	gcInputBg.Size = UDim2.new(1,-68,0,36)
+	gcInputBg.Position = UDim2.new(0,6,1,-42)
 	gcInputBg.BackgroundColor3 = Color3.fromRGB(18,18,18)
+	gcInputBg.BorderSizePixel = 0
+	gcInputBg.ZIndex = 11
 	Instance.new("UICorner", gcInputBg).CornerRadius = UDim.new(0,10)
 	local gcIStroke = Instance.new("UIStroke", gcInputBg)
 	gcIStroke.Color = Color3.fromRGB(40,40,40); gcIStroke.Thickness = 1
@@ -1803,14 +1808,17 @@ local function createGlobalChat(window)
 	gcMsgBox.TextColor3 = Color3.fromRGB(235,235,235); gcMsgBox.TextSize = 13
 	gcMsgBox.Font = Enum.Font.Gotham; gcMsgBox.TextXAlignment = Enum.TextXAlignment.Left
 	gcMsgBox.ClearTextOnFocus = false
+	gcMsgBox.ZIndex = 12
 	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(80,140,255)}):Play() end)
 	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(40,40,40)}):Play() end)
 
 	local gcSendBtn = Instance.new("TextButton", overlay)
-	gcSendBtn.Size = UDim2.new(0,38,0,34); gcSendBtn.Position = UDim2.new(1,-42,1,-40)
-	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "→"
-	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 18
+	gcSendBtn.Size = UDim2.new(0,56,0,36); gcSendBtn.Position = UDim2.new(1,-62,1,-42)
+	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "Send"
+	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 13
 	gcSendBtn.Font = Enum.Font.GothamBold
+	gcSendBtn.BorderSizePixel = 0
+	gcSendBtn.ZIndex = 11
 	Instance.new("UICorner", gcSendBtn).CornerRadius = UDim.new(0,10)
 	gcSendBtn.MouseEnter:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(100,160,255)}):Play() end)
 	gcSendBtn.MouseLeave:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(80,140,255)}):Play() end)
@@ -1821,14 +1829,18 @@ local function createGlobalChat(window)
 		gcMsgOrder += 1
 		local row = Instance.new("Frame", gcScroll)
 		row.Size = UDim2.new(1,0,0,0); row.AutomaticSize = Enum.AutomaticSize.Y
-		row.BackgroundTransparency = 1; row.LayoutOrder = gcMsgOrder
+		row.BackgroundColor3 = Color3.fromRGB(18,18,18); row.LayoutOrder = gcMsgOrder
+		row.BorderSizePixel = 0; row.ZIndex = 11
+		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
 		local lbl = Instance.new("TextLabel", row)
-		lbl.Size = UDim2.new(1,0,0,0); lbl.AutomaticSize = Enum.AutomaticSize.Y
+		lbl.Size = UDim2.new(1,-14,0,0); lbl.Position = UDim2.new(0,7,0,7); lbl.AutomaticSize = Enum.AutomaticSize.Y
 		lbl.BackgroundTransparency = 1; lbl.TextWrapped = true; lbl.RichText = true
 		local nc = username == gcLocalPlayer.Name and "#ffffff" or "#b8b8b8"
 		lbl.Text = string.format('<font color="%s"><b>%s</b></font>\n<font color="#d0d0d0">%s</font>', nc, username, text)
 		lbl.TextSize = 13; lbl.Font = Enum.Font.Gotham; lbl.TextXAlignment = Enum.TextXAlignment.Left
-		task.wait(); gcScroll.CanvasPosition = Vector2.new(0, gcScroll.AbsoluteCanvasSize.Y)
+		lbl.TextYAlignment = Enum.TextYAlignment.Top; lbl.ZIndex = 12
+		row.AutomaticSize = Enum.AutomaticSize.Y
+		task.defer(function() gcScroll.CanvasPosition = Vector2.new(0, gcScroll.AbsoluteCanvasSize.Y) end)
 	end
 
 	local function gcFlashError(msg)
@@ -1854,7 +1866,7 @@ local function createGlobalChat(window)
 					task.wait(0.1); timeLeft = 5 - (tick() - gcLastSend)
 					if timeLeft > 0 then gcSendBtn.Text = math.ceil(timeLeft) end
 				end
-				gcSendBtn.Text = "\xe2\x86\x92"
+					gcSendBtn.Text = "Send"
 				gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255)
 				gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255)
 				gcCooldown = false
