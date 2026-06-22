@@ -1774,10 +1774,22 @@ local function createGlobalChat(window)
 	local gcShellStroke = Instance.new("UIStroke", gcShell)
 	gcShellStroke.Color = Color3.fromRGB(34, 34, 34)
 	gcShellStroke.Thickness = 1
+	local gcActive = Instance.new("TextLabel", overlay)
+	gcActive.AnchorPoint = Vector2.new(1, 0)
+	gcActive.Position = UDim2.new(1, -10, 0, 10)
+	gcActive.Size = UDim2.new(0, 110, 0, 24)
+	gcActive.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+	gcActive.BorderSizePixel = 0
+	gcActive.ZIndex = 11
+	gcActive.Font = Enum.Font.GothamMedium
+	gcActive.Text = "0 online"
+	gcActive.TextColor3 = Color3.fromRGB(60, 220, 100)
+	gcActive.TextSize = 12
+	Instance.new("UICorner", gcActive).CornerRadius = UDim.new(1, 0)
 
 	local gcScroll = Instance.new("ScrollingFrame", overlay)
-	gcScroll.Size = UDim2.new(1, -12, 1, -56)
-	gcScroll.Position = UDim2.new(0, 6, 0, 6)
+	gcScroll.Size = UDim2.new(1, -12, 1, -86)
+	gcScroll.Position = UDim2.new(0, 6, 0, 36)
 	gcScroll.BackgroundTransparency = 1
 	gcScroll.BorderSizePixel = 0
 	gcScroll.ScrollBarThickness = 4
@@ -1812,19 +1824,53 @@ local function createGlobalChat(window)
 	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(80,140,255)}):Play() end)
 	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(40,40,40)}):Play() end)
 
+	local gcArrow, gcArrowOffset, gcArrowSize = resolveIcon("arrow-right")
 	local gcSendBtn = Instance.new("TextButton", overlay)
 	gcSendBtn.Size = UDim2.new(0,56,0,36); gcSendBtn.Position = UDim2.new(1,-62,1,-42)
-	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "Send"
+	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = ""
 	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 13
 	gcSendBtn.Font = Enum.Font.GothamBold
 	gcSendBtn.BorderSizePixel = 0
 	gcSendBtn.ZIndex = 11
 	Instance.new("UICorner", gcSendBtn).CornerRadius = UDim.new(0,10)
+	local gcSendIcon = Instance.new("ImageLabel", gcSendBtn)
+	gcSendIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+	gcSendIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+	gcSendIcon.Size = UDim2.new(0, 18, 0, 18)
+	gcSendIcon.BackgroundTransparency = 1
+	gcSendIcon.Image = gcArrow
+	gcSendIcon.ImageColor3 = Color3.fromRGB(255,255,255)
+	gcSendIcon.ZIndex = 12
+	if gcArrowOffset then gcSendIcon.ImageRectOffset = gcArrowOffset end
+	if gcArrowSize then gcSendIcon.ImageRectSize = gcArrowSize end
 	gcSendBtn.MouseEnter:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(100,160,255)}):Play() end)
 	gcSendBtn.MouseLeave:Connect(function() TweenService:Create(gcSendBtn, TweenInfo.new(0.15), {BackgroundColor3=Color3.fromRGB(80,140,255)}):Play() end)
 
 	local gcLocalPlayer = Players.LocalPlayer
 	local gcMsgOrder = 0
+	local gcThumbs = {}
+	local gcUsers = {[gcLocalPlayer.Name] = gcLocalPlayer.UserId}
+	local function gcThumbFor(username)
+		local cached = gcThumbs[username]
+		if cached ~= nil then return cached end
+		local userId = gcUsers[username]
+		if not userId then
+			local plr = Players:FindFirstChild(username)
+			if plr then
+				userId = plr.UserId
+			else
+				pcall(function() userId = Players:GetUserIdFromNameAsync(username) end)
+			end
+			gcUsers[username] = userId or false
+		end
+		if not userId then gcThumbs[username] = false; return false end
+		local thumb = false
+		pcall(function()
+			thumb = Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+		end)
+		gcThumbs[username] = thumb or false
+		return gcThumbs[username]
+	end
 	local function gcAddMsg(username, text)
 		gcMsgOrder += 1
 		local row = Instance.new("Frame", gcScroll)
@@ -1832,8 +1878,17 @@ local function createGlobalChat(window)
 		row.BackgroundColor3 = Color3.fromRGB(18,18,18); row.LayoutOrder = gcMsgOrder
 		row.BorderSizePixel = 0; row.ZIndex = 11
 		Instance.new("UICorner", row).CornerRadius = UDim.new(0, 8)
+		local avatar = Instance.new("ImageLabel", row)
+		avatar.Size = UDim2.new(0, 26, 0, 26)
+		avatar.Position = UDim2.new(0, 7, 0, 7)
+		avatar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+		avatar.BorderSizePixel = 0
+		avatar.ZIndex = 12
+		local thumb = gcThumbFor(username)
+		if thumb then avatar.Image = thumb end
+		Instance.new("UICorner", avatar).CornerRadius = UDim.new(1, 0)
 		local lbl = Instance.new("TextLabel", row)
-		lbl.Size = UDim2.new(1,-14,0,0); lbl.Position = UDim2.new(0,7,0,7); lbl.AutomaticSize = Enum.AutomaticSize.Y
+		lbl.Size = UDim2.new(1,-47,0,0); lbl.Position = UDim2.new(0,40,0,7); lbl.AutomaticSize = Enum.AutomaticSize.Y
 		lbl.BackgroundTransparency = 1; lbl.TextWrapped = true; lbl.RichText = true
 		local nc = username == gcLocalPlayer.Name and "#ffffff" or "#b8b8b8"
 		lbl.Text = string.format('<font color="%s"><b>%s</b></font>\n<font color="#d0d0d0">%s</font>', nc, username, text)
@@ -1864,9 +1919,10 @@ local function createGlobalChat(window)
 			task.spawn(function()
 				while timeLeft > 0 do
 					task.wait(0.1); timeLeft = 5 - (tick() - gcLastSend)
-					if timeLeft > 0 then gcSendBtn.Text = math.ceil(timeLeft) end
+					if timeLeft > 0 then gcSendBtn.Text = math.ceil(timeLeft); gcSendIcon.Visible = false end
 				end
-					gcSendBtn.Text = "Send"
+						gcSendBtn.Text = ""
+						gcSendIcon.Visible = true
 				gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255)
 				gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255)
 				gcCooldown = false
@@ -1901,6 +1957,18 @@ local function createGlobalChat(window)
 					gcAddMsg(m.username or "Unknown", m.message)
 				end
 			end
+		end
+	end)
+
+	task.spawn(function()
+		while overlay.Parent do
+			local ok, result = pcall(function() return HttpService:JSONDecode(gcHttpGet(DKGC_BASE.."/clients/online")) end)
+			if ok and result and result.count ~= nil then
+				gcActive.Text = tostring(result.count) .. " online"
+			else
+				gcActive.Text = "-- online"
+			end
+			task.wait(5)
 		end
 	end)
 
