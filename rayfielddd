@@ -1735,7 +1735,7 @@ end
 
 local function createGlobalChat(window)
 	window:CreateTab("Global Chat", 0, true)
-	if TabList["Global Chat"] then TabList["Global Chat"].LayoutOrder = 999 end
+	if TabList["Global Chat"] then TabList["Global Chat"].Visible = true; TabList["Global Chat"].LayoutOrder = 999 end
 	if Elements["Global Chat"] then Elements["Global Chat"].LayoutOrder = 999 end
 
 	local gcPage = Elements:FindFirstChild("Global Chat")
