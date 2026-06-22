@@ -1743,8 +1743,8 @@ local function createGlobalChat(window)
 
 	local overlay = Instance.new("Frame", Main)
 	overlay.Name = "GlobalChatOverlay"
-	overlay.Position = useMobileSizing and UDim2.new(0, 12, 0, 78) or UDim2.new(0, 16, 0, 82)
-	overlay.Size = useMobileSizing and UDim2.new(1, -24, 1, -90) or UDim2.new(1, -32, 1, -98)
+	overlay.Position = useMobileSizing and UDim2.new(0, 12, 0, 92) or UDim2.new(0, 16, 0, 96)
+	overlay.Size = useMobileSizing and UDim2.new(1, -24, 1, -104) or UDim2.new(1, -32, 1, -112)
 	overlay.BackgroundTransparency = 1
 	overlay.BorderSizePixel = 0
 	overlay.ClipsDescendants = true
