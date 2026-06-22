@@ -2013,6 +2013,9 @@ local function createSettings(window)
 		newTab:CreateSection(categoryName)
 
 		for settingName, setting in pairs(settingCategory) do
+			if categoryName == 'System' and settingName == 'snow' then
+				continue
+			end
 			if setting.Type == 'input' then
 				setting.Element = newTab:CreateInput({
 					Name = setting.Name,
@@ -2073,19 +2076,28 @@ local function createSettings(window)
 				for _, file in ipairs(callSafely(listfiles, ConfigurationFolder) or {}) do
 					local name = file:match("([^/\\]+)$")
 					if name and name:sub(-#ConfigurationExtension) == ConfigurationExtension then
-						table.insert(configs, name:sub(1, -#ConfigurationExtension - 1))
+						name = name:sub(1, -#ConfigurationExtension - 1)
+						if name ~= '' and not name:match('^%d+$') then
+							table.insert(configs, name)
+						end
 					end
 				end
 			end
+			table.sort(configs)
 			return configs
+		end
+
+		local configs = getConfigs()
+		if selectedConfig ~= '' and not table.find(configs, selectedConfig) then
+			selectedConfig = ''
 		end
 
 		configTab:CreateSection('Configurations')
 
 		local ConfigDropdown = configTab:CreateDropdown({
 			Name = 'Select Config',
-			Options = getConfigs(),
-			CurrentOption = {CFileName},
+			Options = configs,
+			CurrentOption = selectedConfig ~= '' and {selectedConfig} or {},
 			MultipleOptions = false,
 			Ext = true,
 			Callback = function(option)
@@ -2151,6 +2163,15 @@ local function createSettings(window)
 						RayfieldLibrary:Notify({Title = 'Not Found', Content = "Config '" .. selectedConfig .. "' does not exist.", Duration = 3})
 					end
 				end
+			end,
+		})
+
+		settingsTable.System.snow.Element = configTab:CreateToggle({
+			Name = settingsTable.System.snow.Name,
+			CurrentValue = settingsTable.System.snow.Value,
+			Ext = true,
+			Callback = function(Value)
+				updateSetting('System', 'snow', Value)
 			end,
 		})
 	end
