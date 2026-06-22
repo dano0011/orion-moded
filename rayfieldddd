@@ -1743,13 +1743,16 @@ local function createGlobalChat(window)
 
 	local ll = gcPage:FindFirstChildOfClass("UIListLayout")
 	if ll then ll.Enabled = false end
-	gcPage.AutomaticCanvasSize = Enum.AutomaticSize.None
-	gcPage.CanvasSize = UDim2.new(0,0,0,0)
-	gcPage.ScrollBarThickness = 0
+	local up = gcPage:FindFirstChildOfClass("UIPadding")
+	if up then up:Destroy() end
 
-	local gcScroll = Instance.new("ScrollingFrame", gcPage)
-	gcScroll.Size = UDim2.new(1,0,1,-50)
-	gcScroll.Position = UDim2.new(0,0,0,4)
+	local container = Instance.new("Frame", gcPage)
+	container.Size = UDim2.new(1,0,1,0)
+	container.BackgroundTransparency = 1
+	container.ClipsDescendants = true
+
+	local gcScroll = Instance.new("ScrollingFrame", container)
+	gcScroll.Size = UDim2.new(1,0,1,-46)
 	gcScroll.BackgroundTransparency = 1
 	gcScroll.BorderSizePixel = 0
 	gcScroll.ScrollBarThickness = 4
@@ -1757,15 +1760,14 @@ local function createGlobalChat(window)
 	gcScroll.CanvasSize = UDim2.new(0,0,0,0)
 	gcScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	local gcLL = Instance.new("UIListLayout", gcScroll)
-	gcLL.Padding = UDim.new(0,6)
-	gcLL.SortOrder = Enum.SortOrder.LayoutOrder
+	gcLL.Padding = UDim.new(0,6); gcLL.SortOrder = Enum.SortOrder.LayoutOrder
 	local gcPad = Instance.new("UIPadding", gcScroll)
-	gcPad.PaddingTop = UDim.new(0,8); gcPad.PaddingBottom = UDim.new(0,8)
+	gcPad.PaddingTop = UDim.new(0,6); gcPad.PaddingBottom = UDim.new(0,6)
 	gcPad.PaddingLeft = UDim.new(0,8); gcPad.PaddingRight = UDim.new(0,8)
 
-	local gcInputBg = Instance.new("Frame", gcPage)
-	gcInputBg.Size = UDim2.new(1,-50,0,34)
-	gcInputBg.Position = UDim2.new(0,8,1,-42)
+	local gcInputBg = Instance.new("Frame", container)
+	gcInputBg.Size = UDim2.new(1,-46,0,34)
+	gcInputBg.Position = UDim2.new(0,0,1,-40)
 	gcInputBg.BackgroundColor3 = Color3.fromRGB(18,18,18)
 	Instance.new("UICorner", gcInputBg).CornerRadius = UDim.new(0,10)
 	local gcIStroke = Instance.new("UIStroke", gcInputBg)
@@ -1781,9 +1783,9 @@ local function createGlobalChat(window)
 	gcMsgBox.Focused:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(80,140,255)}):Play() end)
 	gcMsgBox.FocusLost:Connect(function() TweenService:Create(gcIStroke, TweenInfo.new(0.2), {Color=Color3.fromRGB(40,40,40)}):Play() end)
 
-	local gcSendBtn = Instance.new("TextButton", gcPage)
-	gcSendBtn.Size = UDim2.new(0,38,0,34); gcSendBtn.Position = UDim2.new(1,-46,1,-42)
-	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "\xe2\x86\x92"
+	local gcSendBtn = Instance.new("TextButton", container)
+	gcSendBtn.Size = UDim2.new(0,38,0,34); gcSendBtn.Position = UDim2.new(1,-42,1,-40)
+	gcSendBtn.BackgroundColor3 = Color3.fromRGB(80,140,255); gcSendBtn.Text = "→"
 	gcSendBtn.TextColor3 = Color3.fromRGB(255,255,255); gcSendBtn.TextSize = 18
 	gcSendBtn.Font = Enum.Font.GothamBold
 	Instance.new("UICorner", gcSendBtn).CornerRadius = UDim.new(0,10)
