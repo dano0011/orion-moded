@@ -2051,10 +2051,6 @@ local function createSettings(window)
 		end
 	end
 
-	settingsCreated = true
-	loadSettings()
-	saveSettings()
-
 	local configTab = window:CreateTab('Settings', 10723344270, true)
 
 	if TabList['Settings'] then
@@ -2166,6 +2162,8 @@ local function createSettings(window)
 			end,
 		})
 
+		configTab:CreateSection('Extra')
+
 		settingsTable.System.snow.Element = configTab:CreateToggle({
 			Name = settingsTable.System.snow.Name,
 			CurrentValue = settingsTable.System.snow.Value,
@@ -2175,6 +2173,10 @@ local function createSettings(window)
 			end,
 		})
 	end
+
+	settingsCreated = true
+	loadSettings()
+	saveSettings()
 end
 
 local function fadeOutKeyUI(KeyMain)
