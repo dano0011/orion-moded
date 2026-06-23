@@ -963,7 +963,7 @@ local Library do
                 Image = "rbxassetid://106214494928059",
 				AnchorPoint = Vector2New(1, 1),
 				BorderColor3 = FromRGB(0, 0, 0),
-				Size = UDim2New(0, 55, 0, 55),
+                Size = UDim2New(0, 48, 0, 48),
                 Position = UDim2New(1, 10, 1, 10),
                 Name = "\0",
 				BorderSizePixel = 0,
