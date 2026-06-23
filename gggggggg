@@ -5130,7 +5130,7 @@ local Library do
                     Parent = Items["Top"].Instance,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(1, 17, 1, 17),
+                    Size = UDim2New(0, 16, 0, 16),
                     AutoButtonColor = false,
                     AnchorPoint = Vector2New(1, 0),
                     Image = "rbxassetid://74002545500434",
