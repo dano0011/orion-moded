@@ -964,7 +964,7 @@ local Library do
 				AnchorPoint = Vector2New(1, 1),
 				BorderColor3 = FromRGB(0, 0, 0),
 				Size = UDim2New(0, 55, 0, 55),
-                Position = UDim2New(1, 7, 1, 7),
+                Position = UDim2New(1, 10, 1, 10),
                 Name = "\0",
 				BorderSizePixel = 0,
 				BackgroundTransparency = 1,
