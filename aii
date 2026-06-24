@@ -1998,58 +1998,7 @@ local function createSettings(window)
 		return
 	end
 
-	local newTab = window:CreateTab('Rayfield Settings', 0, true)
 
-	if TabList['Rayfield Settings'] then
-		TabList['Rayfield Settings'].LayoutOrder = 1000
-	end
-
-	if Elements['Rayfield Settings'] then
-		Elements['Rayfield Settings'].LayoutOrder = 1000
-	end
-
-	-- Create sections and elements
-	for categoryName, settingCategory in pairs(settingsTable) do
-		newTab:CreateSection(categoryName)
-
-		for settingName, setting in pairs(settingCategory) do
-			if categoryName == 'System' and settingName == 'snow' then
-				continue
-			end
-			if setting.Type == 'input' then
-				setting.Element = newTab:CreateInput({
-					Name = setting.Name,
-					CurrentValue = setting.Value,
-					PlaceholderText = setting.Placeholder,
-					Ext = true,
-					RemoveTextAfterFocusLost = setting.ClearOnFocus,
-					Callback = function(Value)
-						updateSetting(categoryName, settingName, Value)
-					end,
-				})
-			elseif setting.Type == 'toggle' then
-				setting.Element = newTab:CreateToggle({
-					Name = setting.Name,
-					CurrentValue = setting.Value,
-					Ext = true,
-					Callback = function(Value)
-						updateSetting(categoryName, settingName, Value)
-					end,
-				})
-			elseif setting.Type == 'bind' then
-				setting.Element = newTab:CreateKeybind({
-					Name = setting.Name,
-					CurrentKeybind = setting.Value,
-					HoldToInteract = false,
-					Ext = true,
-					CallOnChange = true,
-					Callback = function(Value)
-						updateSetting(categoryName, settingName, Value)
-					end,
-				})
-			end
-		end
-	end
 
 	local configTab = window:CreateTab('Settings', 10723344270, true)
 
@@ -2170,6 +2119,26 @@ local function createSettings(window)
 			Ext = true,
 			Callback = function(Value)
 				updateSetting('System', 'snow', Value)
+			end,
+		})
+
+		settingsTable.General.rayfieldOpen.Element = configTab:CreateKeybind({
+			Name = settingsTable.General.rayfieldOpen.Name,
+			CurrentKeybind = settingsTable.General.rayfieldOpen.Value,
+			HoldToInteract = false,
+			Ext = true,
+			CallOnChange = true,
+			Callback = function(Value)
+				updateSetting('General', 'rayfieldOpen', Value)
+			end,
+		})
+
+		settingsTable.System.usageAnalytics.Element = configTab:CreateToggle({
+			Name = settingsTable.System.usageAnalytics.Name,
+			CurrentValue = settingsTable.System.usageAnalytics.Value,
+			Ext = true,
+			Callback = function(Value)
+				updateSetting('System', 'usageAnalytics', Value)
 			end,
 		})
 	end
@@ -4769,7 +4738,7 @@ if Topbar:FindFirstChild('Settings') then
 				end
 			end
 
-			Elements.UIPageLayout:JumpTo(Elements['Rayfield Settings'])
+			Elements.UIPageLayout:JumpTo(Elements['Settings'])
 		end)
 	end)
 end
