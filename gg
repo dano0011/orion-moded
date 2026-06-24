@@ -887,6 +887,15 @@ MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 MainStroke.Color = Color3.fromRGB(0, 255, 0)
 MainStroke.Thickness = .5
 MainStroke.Parent = Main
+
+local Gradient = Instance.new("UIGradient")
+Gradient.Rotation = 90
+Gradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.5),
+    NumberSequenceKeypoint.new(1, 1)   
+})
+Gradient.Parent = MainStroke
+
 local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
 local Elements = Main.Elements
