@@ -882,6 +882,11 @@ end
 -- Object Variables
 
 local Main = Rayfield.Main
+local MainStroke = Instance.new("UIStroke")
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+MainStroke.Color = Color3.fromRGB(0, 255, 0)
+MainStroke.Thickness = .5
+MainStroke.Parent = Main
 local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
 local Elements = Main.Elements
@@ -936,6 +941,7 @@ local function ChangeTheme(Theme)
 	end
 
 	Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
+	MainStroke.Color = Color3.fromRGB(0, 255, 0)
 	Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Topbar.CornerRepair.BackgroundColor3 = SelectedTheme.Topbar
 	Rayfield.Main.Shadow.Image.ImageColor3 = SelectedTheme.Shadow
