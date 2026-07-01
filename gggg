@@ -2727,7 +2727,7 @@ local Library do
 
         function Keybind:Set(Key)
             if StringFind(tostring(Key), "Enum") then 
-                self.Key = tostring(Key)
+                self.Key = Key.Name == "Backspace" and "None" or tostring(Key)
 
                 Key = Key.Name == "Backspace" and "None" or Key.Name
 
@@ -2748,8 +2748,10 @@ local Library do
                     Library:SafeCall(Data.Callback, self.Toggled)
                 end
             elseif type(Key) == "table" then
-                local RealKey = Key.Key == "Backspace" and "None" or Key.Key
-                self.Key = tostring(Key.Key)
+                local RawKey = tostring(Key.Key)
+                local IsNone = Key.Key == "Backspace" or Key.Key == "None" or RawKey == "Enum.KeyCode.Backspace" or RawKey == "None"
+                local RealKey = IsNone and "None" or Key.Key
+                self.Key = IsNone and "None" or RawKey
 
                 if Key.Mode then
                     self.Mode = Key.Mode
@@ -2759,10 +2761,8 @@ local Library do
                     self:SetMode("toggle")
                 end
 
-                local KeyString = Keys[self.Key] or StringGSub(tostring(RealKey), "Enum.", "") or RealKey
+                local KeyString = IsNone and "None" or Keys[self.Key] or StringGSub(tostring(RealKey), "Enum.", "") or RealKey
                 local TextToDisplay = KeyString and StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "") or "None"
-
-                TextToDisplay = StringGSub(StringGSub(KeyString, "KeyCode.", ""), "UserInputType.", "")
 
                 self.Value = TextToDisplay
                 Items["KeyButton"].Instance.Text = TextToDisplay
