@@ -7249,6 +7249,7 @@ local Library do
 
                 Name = Data.Name or Data.name or "Section",
                 Description = Data.Description or Data.Description or "",
+                Icon = Data.Icon or Data.icon or nil,
                 Side = Data.Side or Data.side or 1,
                 Premium = Data.Premium or Data.premium or false,
                 IsOpen = false,
@@ -7325,37 +7326,36 @@ local Library do
                     CornerRadius = UDimNew(0, 6)
                 })
 
-                local HasSectionIcon = false
+                local SectionIconData
 
-                if type(Section.Icon) == "string" and Section.Icon ~= "" and Lucide then
-                    local Success, IconData = pcall(function()
-                        return Lucide.GetAsset(Section.Icon, 48)
-                    end)
-
-                    if Success and IconData then
-                        HasSectionIcon = true
-
-                        Items["Icon"] = Instances:Create("ImageLabel", {
-                            Parent = Items["Section"].Instance,
-                            Name = "\0",
-                            Image = IconData.Url,
-                            ImageRectSize = IconData.ImageRectSize,
-                            ImageRectOffset = IconData.ImageRectOffset,
-                            ImageColor3 = Library.Theme.Accent,
-                            BackgroundTransparency = 1,
-                            Position = UDim2New(0, 8, 0, 7),
-                            Size = UDim2New(0, 16, 0, 16),
-                            BorderSizePixel = 0,
-                            ZIndex = 3,
-                            ScaleType = Enum.ScaleType.Fit
-                        })
-
-                        Items["Icon"]:AddToTheme({
-                            ImageColor3 = "Accent"
-                        })
-                    else
-                        warn("Invalid Lucide section icon:", Section.Icon, IconData)
+                if type(Section.Icon) == "string" and Section.Icon ~= "" then
+                    if Section.Icon:find("rbxassetid://", 1, true) or Section.Icon:find("rbxasset://", 1, true) or Section.Icon:find("http", 1, true) then
+                        SectionIconData = {Url = Section.Icon}
+                    elseif Lucide then
+                        local Success, IconData = pcall(function()
+                            return Lucide.GetAsset(Section.Icon, 48)
+                        end)
+                        SectionIconData = Success and IconData or nil
                     end
+                end
+
+                if SectionIconData then
+                    Items["Icon"] = Instances:Create("ImageLabel", {
+                        Parent = Items["Section"].Instance,
+                        Name = "\0",
+                        Image = SectionIconData.Url,
+                        ImageRectSize = SectionIconData.ImageRectSize,
+                        ImageRectOffset = SectionIconData.ImageRectOffset,
+                        ImageColor3 = Library.Theme.Accent,
+                        BackgroundTransparency = 1,
+                        Position = UDim2New(0, 8, 0, 7),
+                        Size = UDim2New(0, 16, 0, 16),
+                        BorderSizePixel = 0,
+                        ZIndex = 3,
+                        ScaleType = Enum.ScaleType.Fit
+                    })
+
+                    Items["Icon"]:AddToTheme({ImageColor3 = "Accent"})
                 end
 
                 Items["Text"] = Instances:Create("TextLabel", {
@@ -7367,7 +7367,7 @@ local Library do
                     Text = Section.Name,
                     Size = UDim2New(0, 0, 0, 15),
                     BackgroundTransparency = 1,
-                    Position = UDim2New(0, HasSectionIcon and 30 or 8, 0, 5),
+                    Position = UDim2New(0, SectionIconData and 30 or 8, 0, 5),
                     BorderSizePixel = 0,
                     AutomaticSize = Enum.AutomaticSize.X,
                     TextSize = 14,
