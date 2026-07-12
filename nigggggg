@@ -2629,7 +2629,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		TabPage.ScrollBarThickness = 3
 		TabPage.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-		TabPage.ScrollBarImageTransparency = 0.7
+		TabPage.ScrollBarImageTransparency = 0.2
 		TabPage.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
 		TabPage.ElasticBehavior = Enum.ElasticBehavior.Never
 
