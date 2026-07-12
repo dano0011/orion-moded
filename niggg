@@ -901,14 +901,45 @@ local Topbar = Main.Topbar
 local Elements = Main.Elements
 local TabList = Main.TabList
 if TabList:IsA("ScrollingFrame") then
-	TabList.CanvasSize = UDim2.new(0, 0, 0, 0)
-	TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	TabList.ScrollingDirection = Enum.ScrollingDirection.Y
+	local TabLayout = TabList:FindFirstChildWhichIsA("UIListLayout")
 
-	TabList.ScrollBarThickness = 3
+	TabList.AutomaticCanvasSize = Enum.AutomaticSize.None
+	TabList.ScrollingDirection = Enum.ScrollingDirection.Y
 	TabList.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 	TabList.ScrollBarImageTransparency = 0.4
 	TabList.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+	TabList.ElasticBehavior = Enum.ElasticBehavior.Never
+
+	local function updateTabScrolling()
+		if not TabLayout then
+			return
+		end
+
+		local contentHeight = TabLayout.AbsoluteContentSize.Y
+		local needsScrolling = contentHeight > TabList.AbsoluteWindowSize.Y
+
+		TabList.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 6)
+		TabList.ScrollBarThickness = needsScrolling and 3 or 0
+		TabList.ScrollingEnabled = needsScrolling
+
+		if not needsScrolling then
+			TabList.CanvasPosition = Vector2.new(0, 0)
+		end
+	end
+
+	if TabLayout then
+		TabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateTabScrolling)
+	end
+
+	TabList:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateTabScrolling)
+	TabList.ChildAdded:Connect(function()
+		task.defer(updateTabScrolling)
+	end)
+	TabList.ChildRemoved:Connect(function()
+		task.defer(updateTabScrolling)
+	end)
+
+	task.defer(updateTabScrolling)
 end
 local dragBar = Rayfield:FindFirstChild('Drag')
 local dragInteract = dragBar and dragBar.Interact or nil
