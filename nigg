@@ -900,6 +900,16 @@ local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
 local Elements = Main.Elements
 local TabList = Main.TabList
+if TabList:IsA("ScrollingFrame") then
+	TabList.CanvasSize = UDim2.new(0, 0, 0, 0)
+	TabList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	TabList.ScrollingDirection = Enum.ScrollingDirection.Y
+
+	TabList.ScrollBarThickness = 3
+	TabList.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+	TabList.ScrollBarImageTransparency = 0.4
+	TabList.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+end
 local dragBar = Rayfield:FindFirstChild('Drag')
 local dragInteract = dragBar and dragBar.Interact or nil
 local dragBarCosmetic = dragBar and dragBar.Drag or nil
