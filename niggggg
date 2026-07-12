@@ -2622,15 +2622,19 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 		-- Create Elements Page
 		local TabPage = Elements.Template:Clone()
+
 		TabPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
 		TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
 		TabPage.ScrollingDirection = Enum.ScrollingDirection.Y
 
 		TabPage.ScrollBarThickness = 3
 		TabPage.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-		TabPage.ScrollBarImageTransparency = 0.4
+		TabPage.ScrollBarImageTransparency = 0.7
 		TabPage.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
 		TabPage.ElasticBehavior = Enum.ElasticBehavior.Never
+
+		TabPage.Size = UDim2.new(1, 0, 1, -6)
+
 		TabPage.Name = Name
 		TabPage.Visible = true
 
