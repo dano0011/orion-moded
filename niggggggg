@@ -2638,6 +2638,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 		TabPage.Name = Name
 		TabPage.Visible = true
 
+		local Padding = Instance.new("UIPadding")
+		Padding.PaddingRight = UDim.new(0, 8)
+		Padding.Parent = TabPage
+
 		TabPage.LayoutOrder = Ext and 10000 or #Elements:GetChildren()
 
 		for _, TemplateElement in ipairs(TabPage:GetChildren()) do
