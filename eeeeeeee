@@ -5873,8 +5873,8 @@ local Library do
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
                     AnchorPoint = Vector2New(0, 0.5),
-                    Position = UDim2New(0, 4, 0.5, 0),
-                    Size = UDim2New(0, 3, 0, 18),
+                    Position = UDim2New(0, 0, 0.5, 0),
+                    Size = UDim2New(0, 3, 1, 0),
                     ZIndex = 2
                 })
                 Items["AccentBar"]:AddToTheme({BackgroundColor3 = "Accent"})
@@ -5998,8 +5998,6 @@ local Library do
 
                 Items["Inactive"]:OnHover(function()
                     if Page.Active then return end
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0.9})
-                    Items["AccentBar"]:Tween(nil, {BackgroundTransparency = 0.25})
                     Items["Text"]:Tween(nil, {TextTransparency = 0.2})
 
                     if Page.Icon then
@@ -6009,8 +6007,6 @@ local Library do
 
                 Items["Inactive"]:OnHoverLeave(function()
                     if Page.Active then return end
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 1})
-                    Items["AccentBar"]:Tween(nil, {BackgroundTransparency = 1})
                     Items["Text"]:Tween(nil, {TextTransparency = 0.5})
 
                     if Page.Icon then
@@ -6035,7 +6031,7 @@ local Library do
                 Items["Page"].Instance.Parent = not Bool and Library.UnusedHolder.Instance or Page.Window.Items["Content"].Instance
                 
                 if Page.Active then
-                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0.84})
+                    Items["Inactive"]:Tween(nil, {BackgroundTransparency = 0.91})
                     Items["AccentBar"]:Tween(nil, {BackgroundTransparency = 0})
                     Items["Text"]:Tween(nil, {TextTransparency = 0})
 
