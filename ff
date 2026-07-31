@@ -7911,7 +7911,7 @@ local Library do
                     end
 
                     WarnHitbox.MouseEnter:Connect(function()
-                        if Library.HideTooltips then return end
+                        if Library.HideTooltips or Library.ActiveBlockedSubTab then return end
                         UpdateWarnPos()
                         WarnTooltip:Tween(nil, {BackgroundTransparency = 0})
                         WarnText:Tween(nil, {TextTransparency = 0})
