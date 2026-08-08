@@ -11314,7 +11314,7 @@ local Library do
             })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
 
             local exec = (identifyexecutor and identifyexecutor() or getexecutorname() or ""):lower()
-            local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity") or exec:find("real") or exec:find("potassium")
+            local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity") or exec:find("real")
             local supportColor = unsupported and FromRGB(255, 170, 64) or FromRGB(67, 214, 117)
 
             Items["ExecutorStatusPulse1"] = Instances:Create("Frame", {
@@ -11368,18 +11368,18 @@ local Library do
                         Pulse.Size = UDim2New(0, 8, 0, 8)
                         Pulse.BackgroundTransparency = 0.45
 
-                        Tween:Create(Pulse, TweenInfo.new(1.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Tween:Create(Pulse, TweenInfo.new(1.65, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                             Size = UDim2New(0, 24, 0, 24),
                             BackgroundTransparency = 1
                         }, true)
 
-                        task.wait(1.15)
+                        task.wait(1.65)
                     end
                 end)
             end
 
             AnimateExecutorPulse(Items["ExecutorStatusPulse1"], 0)
-            AnimateExecutorPulse(Items["ExecutorStatusPulse2"], 0.55)
+            AnimateExecutorPulse(Items["ExecutorStatusPulse2"], 0.8)
 
             Items["IsSupportedText"] = Instances:Create("TextLabel", {
                 Parent = Items["ExecutorInfo"].Instance,
