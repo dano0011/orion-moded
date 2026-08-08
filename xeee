@@ -11314,7 +11314,7 @@ local Library do
             })  Items["BigExecutorText"]:AddToTheme({TextColor3 = "Text"})
 
             local exec = (identifyexecutor and identifyexecutor() or getexecutorname() or ""):lower()
-            local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity") or exec:find("real")
+            local unsupported = exec:find("xeno") or exec:find("solara") or exec:find("velocity") or exec:find("real") or exec:find("pottassium")
             local supportColor = unsupported and FromRGB(255, 170, 64) or FromRGB(67, 214, 117)
 
             Items["ExecutorStatusPulse1"] = Instances:Create("Frame", {
